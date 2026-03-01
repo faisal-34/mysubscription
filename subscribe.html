@@ -745,6 +745,146 @@
   </div>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // ═══════════════════════════════════════════════════
+  //  REPLACE THESE WITH YOUR REAL VALUES FROM STRIPE
+  // ═══════════════════════════════════════════════════
+  const STRIPE_KEY = 'pk_live_51R864pLBbiKaLshEID7ainzBH8Id2nnZqwTFE8PqCFgCB4Pmq8ANGLn9DnvuoiSbdGSPLFOdzwshgiWQVBYKKaZC00wBLYmoHZ';
+
+  const PRICE_IDS = {
+    basic:  'price_1T60KQLBbiKaLshEdKpkg6yS',
+    care:   'price_1T60LzLBbiKaLshEDceI8gn2',
+    growth: 'price_1T60N3LBbiKaLshElJqiruCP',
+  };
+  // ═══════════════════════════════════════════════════
+
+  let stripeInstance = null;
+  let cardElement = null;
+  let activePlan = null;
+  let stripeReady = false;
+
+  // ── Open modal immediately on button click ──────────
+  function openModal(title, price, plan) {
+    activePlan = plan;
+    document.getElementById('modal-badge').textContent = title;
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-price').textContent = price + ' · recurring monthly';
+    document.getElementById('form-view').style.display = 'block';
+    document.getElementById('success-view').style.display = 'none';
+    document.getElementById('submit-btn').textContent = 'Confirm Subscription';
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('overlay').classList.add('open');
+
+    // Mount Stripe card after modal is visible
+    setTimeout(mountCard, 100);
+  }
+
+  function mountCard() {
+    var cardEl = document.getElementById('card-element');
+
+    // Check Stripe.js loaded
+    if (typeof Stripe === 'undefined') {
+      cardEl.innerHTML = '<p style="font-family:monospace;font-size:12px;color:#c0392b;">⚠️ Stripe.js failed to load. Check your internet connection and refresh.</p>';
+      return;
+    }
+
+    // Check key is configured
+    if (STRIPE_KEY.indexOf('REPLACE') !== -1) {
+      cardEl.innerHTML = '<p style="font-family:monospace;font-size:12px;color:#8a7f72;">⚠️ Stripe key not configured yet.</p>';
+      return;
+    }
+
+    // Already mounted
+    if (stripeReady && cardElement) return;
+
+    try {
+      stripeInstance = Stripe(STRIPE_KEY);
+      var elements = stripeInstance.elements();
+      cardElement = elements.create('card', {
+        style: {
+          base: {
+            color: '#1a1714',
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            '::placeholder': { color: '#8a7f72' }
+          }
+        }
+      });
+
+      cardEl.innerHTML = '';
+      cardElement.mount('#card-element');
+      stripeReady = true;
+    } catch(err) {
+      cardEl.innerHTML = '<p style="font-family:monospace;font-size:12px;color:#c0392b;">⚠️ Stripe error: ' + err.message + '</p>';
+      console.error('Stripe init error:', err);
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  document.getElementById('overlay').addEventListener('click', function(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  });
+
+  async function handleSubscribe() {
+    var name  = document.getElementById('f-name').value.trim();
+    var email = document.getElementById('f-email').value.trim();
+    var btn   = document.getElementById('submit-btn');
+
+    if (!name || !email) {
+      alert('Please enter your name and email.');
+      return;
+    }
+
+    if (!stripeReady || !cardElement) {
+      alert('Payment form is not ready. Please refresh the page and try again.');
+      return;
+    }
+
+    btn.textContent = 'Processing...';
+    btn.disabled = true;
+
+    try {
+      var res = await fetch('/api/create-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, email: email, priceId: PRICE_IDS[activePlan] })
+      });
+
+      if (!res.ok) {
+        var errData = await res.json().catch(function() { return {}; });
+        if (errData.error === 'already_subscribed') {
+          throw new Error('This email is already subscribed to this plan. Email info@xentaa.com to make changes.');
+        }
+        throw new Error(errData.error || 'Server error — please try again.');
+      }
+
+      var data = await res.json();
+      var clientSecret = data.clientSecret;
+
+      if (!clientSecret) throw new Error('No client secret returned from server.');
+
+      var result = await stripeInstance.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: { name: name, email: email }
+        }
+      });
+
+      if (result.error) throw new Error(result.error.message);
+
+      // Success!
+      document.getElementById('form-view').style.display = 'none';
+      document.getElementById('success-view').style.display = 'block';
+
+    } catch(err) {
+      alert('Error: ' + err.message);
+      btn.textContent = 'Confirm Subscription';
+      btn.disabled = false;
+    }
+  }
+</script><script>
     // ═══════════════════════════════════════════════════════
     // STRIPE SETUP — Replace these values to go live
     // ═══════════════════════════════════════════════════════
@@ -758,12 +898,12 @@
     // STEP 4 → Paste the price IDs below
     // STEP 5 → Set up a backend (see note below)
     //
-    const STRIPE_KEY = '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';
+    const STRIPE_KEY = 'pk_live_51R864pLBbiKaLshEID7ainzBH8Id2nnZqwTFE8PqCFgCB4Pmq8ANGLn9DnvuoiSbdGSPLFOdzwshgiWQVBYKKaZC00wBLYmoHZ';
 
     const PRICE_IDS = {
-      basic:  'prod_U48bTexaa8uUto',    // $99/mo
-      care:   'prod_U48dybUoJsdQz4',     // $199/mo  ← Al-Madina plan
-      growth: 'prod_U48eo3kVZrT8Jb',   // $399/mo
+      basic:  'price_1T60KQLBbiKaLshEdKpkg6yS',    // $99/mo
+      care:   'price_1T60LzLBbiKaLshEDceI8gn2',     // $199/mo  ← Al-Madina plan
+      growth: 'price_1T60N3LBbiKaLshElJqiruCP',   // $399/mo
     };
     // ═══════════════════════════════════════════════════════
     // BACKEND NOTE:
