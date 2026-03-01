@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Maintenance Plans — Faisal Ssempagama</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f7f3ec;
+      --paper: #ede8df;
+      --ink: #1a1714;
+      --ink-mid: #3d3730;
+      --ink-light: #8a7f72;
+      --teal: #1a6b5e;
+      --teal-light: #22876f;
+      --teal-pale: rgba(26,107,94,0.08);
+      --teal-border: rgba(26,107,94,0.2);
+      --amber: #c47b1a;
+      --white: #ffffff;
+      --serif: 'Instrument Serif', serif;
+      --mono: 'Geist Mono', monospace;
+      --display: 'Syne', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--ink);
+      padding: 18px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-logo {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--cream);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .header-logo span { color: #4ecba5; }
+    .header-back {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+    .header-back:hover { color: var(--cream); }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--ink);
+      padding: 80px 60px 100px;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 50% 120%, rgba(26,107,94,0.25) 0%, transparent 70%);
+    }
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #4ecba5;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .hero h1 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      color: var(--cream);
+      line-height: 1.05;
+      position: relative;
+      margin-bottom: 24px;
+    }
+    .hero h1 em {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      color: #4ecba5;
+    }
+    .hero-sub {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      color: rgba(247,243,236,0.6);
+      max-width: 520px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ── WHAT'S INCLUDED STRIP ── */
+    .includes-strip {
+      background: var(--teal);
+      padding: 20px 60px;
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      flex-wrap: wrap;
+    }
+    .include-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(247,243,236,0.85);
+    }
+    .include-item::before {
+      content: '✓';
+      font-size: 0.8rem;
+      color: #a8ecd8;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 40px;
+    }
+
+    /* ── PLAN CARDS ── */
+    .plans {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr 1fr;
+      gap: 2px;
+      margin-bottom: 80px;
+      background: var(--paper);
+      border: 1px solid rgba(26,23,20,0.1);
+    }
+    .plan-card {
+      background: var(--white);
+      padding: 50px 40px 40px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .plan-card.featured {
+      background: var(--ink);
+      color: var(--cream);
+      transform: scaleY(1.02);
+      z-index: 2;
+      box-shadow: 0 20px 60px rgba(26,23,20,0.25);
+    }
+    .plan-badge {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 2px;
+      display: inline-block;
+      margin-bottom: 28px;
+      width: fit-content;
+    }
+    .plan-badge.standard { background: var(--teal-pale); color: var(--teal); }
+    .plan-badge.popular { background: #4ecba5; color: var(--ink); }
+    .plan-badge.premium { background: rgba(196,123,26,0.1); color: var(--amber); }
+
+    .plan-name {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+    .plan-card.featured .plan-name { color: #4ecba5; }
+
+    .plan-price {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 3.8rem;
+      line-height: 1;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+    .plan-card.featured .plan-price { color: var(--cream); }
+
+    .plan-cycle {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 2px;
+      color: var(--ink-light);
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .plan-card.featured .plan-cycle { color: rgba(247,243,236,0.45); }
+
+    .plan-tagline {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--ink-mid);
+      margin-bottom: 28px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid rgba(26,23,20,0.08);
+    }
+    .plan-card.featured .plan-tagline {
+      color: rgba(247,243,236,0.65);
+      border-bottom-color: rgba(247,243,236,0.08);
+    }
+
+    .plan-features {
+      list-style: none;
+      flex: 1;
+      margin-bottom: 36px;
+    }
+    .plan-feature {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--ink-mid);
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(26,23,20,0.06);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      line-height: 1.5;
+    }
+    .plan-card.featured .plan-feature {
+      color: rgba(247,243,236,0.75);
+      border-bottom-color: rgba(247,243,236,0.06);
+    }
+    .plan-feature .check { color: var(--teal); flex-shrink: 0; }
+    .plan-card.featured .plan-feature .check { color: #4ecba5; }
+    .plan-feature .dim { color: var(--ink-light); opacity: 0.6; }
+
+    .plan-cta {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 16px 24px;
+      border: none;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-weight: 500;
+    }
+    .plan-cta.outline {
+      background: transparent;
+      color: var(--teal);
+      border: 1.5px solid var(--teal-border);
+    }
+    .plan-cta.outline:hover { background: var(--teal-pale); border-color: var(--teal); }
+    .plan-cta.solid {
+      background: #4ecba5;
+      color: var(--ink);
+    }
+    .plan-cta.solid:hover { background: #6ed8b8; }
+    .plan-cta.amber {
+      background: transparent;
+      color: var(--amber);
+      border: 1.5px solid rgba(196,123,26,0.25);
+    }
+    .plan-cta.amber:hover { background: rgba(196,123,26,0.06); border-color: var(--amber); }
+
+    .plan-secure {
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--ink-light);
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+    .plan-card.featured .plan-secure { color: rgba(247,243,236,0.3); }
+
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      margin-bottom: 80px;
+    }
+    .section-heading {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .section-sub {
+      font-family: var(--serif);
+      font-style: italic;
+      color: var(--ink-light);
+      margin-bottom: 48px;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: var(--paper);
+      border: 1px solid rgba(26,23,20,0.1);
+    }
+    .step {
+      background: var(--white);
+      padding: 36px 28px;
+    }
+    .step-num {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 3rem;
+      color: rgba(26,107,94,0.1);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .step-title {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .step-desc {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--ink-light);
+      line-height: 1.7;
+    }
+
+    /* ── FAQ ── */
+    .faq-section { margin-bottom: 80px; }
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--paper);
+      border: 1px solid rgba(26,23,20,0.1);
+    }
+    .faq-item {
+      background: var(--white);
+      padding: 32px 36px;
+    }
+    .faq-q {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .faq-a {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--ink-light);
+      line-height: 1.8;
+    }
+
+    /* ── CONTACT STRIP ── */
+    .contact-strip {
+      background: var(--ink);
+      padding: 60px;
+      text-align: center;
+      border-radius: 4px;
+    }
+    .contact-strip p {
+      font-family: var(--serif);
+      font-style: italic;
+      color: rgba(247,243,236,0.55);
+      margin-bottom: 20px;
+    }
+    .contact-strip a {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #4ecba5;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(78,203,165,0.3);
+      padding-bottom: 2px;
+      transition: border-color 0.2s;
+    }
+    .contact-strip a:hover { border-color: #4ecba5; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 40px;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: var(--ink-light);
+      text-transform: uppercase;
+    }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(26,23,20,0.75);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--white);
+      width: 90%;
+      max-width: 460px;
+      padding: 56px 48px;
+      position: relative;
+      transform: translateY(24px);
+      transition: transform 0.3s;
+    }
+    .overlay.open .modal { transform: translateY(0); }
+    .modal-close {
+      position: absolute; top: 18px; right: 22px;
+      background: none; border: none;
+      font-size: 1.2rem; color: var(--ink-light); cursor: pointer;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--ink); }
+    .modal-plan-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      background: var(--teal-pale);
+      color: var(--teal);
+      margin-bottom: 16px;
+    }
+    .modal-title {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.8rem;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .modal-price {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      color: var(--ink-light);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+    .form-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--cream);
+      border: 1px solid rgba(26,23,20,0.12);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      padding: 13px 16px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.25s;
+    }
+    .form-input:focus { border-color: var(--teal); }
+    .form-input::placeholder { color: var(--ink-light); }
+    #card-element {
+      background: var(--cream);
+      border: 1px solid rgba(26,23,20,0.12);
+      padding: 13px 16px;
+      margin-bottom: 24px;
+      transition: border-color 0.25s;
+    }
+    #card-element.StripeElement--focus { border-color: var(--teal); }
+    .submit-btn {
+      width: 100%;
+      background: var(--teal);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 16px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.25s;
+    }
+    .submit-btn:hover { background: var(--teal-light); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .modal-footer-note {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--ink-light);
+      text-align: center;
+      margin-top: 14px;
+      letter-spacing: 1px;
+    }
+
+    /* success state */
+    .success-state {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .success-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+    .success-title {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .success-msg {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--ink-light);
+      line-height: 1.8;
+    }
+
+    @media (max-width: 800px) {
+      header, .hero, .includes-strip { padding-left: 24px; padding-right: 24px; }
+      .main { padding: 50px 24px; }
+      .plans { grid-template-columns: 1fr; }
+      .plan-card.featured { transform: none; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .faq-grid { grid-template-columns: 1fr; }
+      .modal { padding: 40px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <a href="index.html" class="header-logo">FS <span>·</span> Web Services</a>
+    <a href="/cdn-cgi/l/email-protection#5a33343c351a223f342e3b3b74393537" class="header-back">← Contact Me</a>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">Web Maintenance & Support Plans</div>
+    <h1>Your website,<br><em>always taken care of.</em></h1>
+    <p class="hero-sub">Monthly retainer plans for organizations that want a reliable tech partner — not a one-time freelancer.</p>
+  </div>
+
+  <!-- WHAT'S ALWAYS INCLUDED -->
+  <div class="includes-strip">
+    <div class="include-item">Monthly Website Updates</div>
+    <div class="include-item">Priority Bug Fixes</div>
+    <div class="include-item">Secure Payments via Stripe</div>
+    <div class="include-item">Cancel Anytime</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PLANS -->
+    <div class="plans" id="plans">
+
+      <!-- Basic -->
+      <div class="plan-card">
+        <span class="plan-badge standard">Basic</span>
+        <div class="plan-name">Maintenance</div>
+        <div class="plan-price">$99</div>
+        <div class="plan-cycle">per month</div>
+        <div class="plan-tagline">For small sites that need occasional upkeep.</div>
+        <ul class="plan-features">
+          <li class="plan-feature"><span class="check">✓</span> Up to 2 content updates/mo</li>
+          <li class="plan-feature"><span class="check">✓</span> Bug fix requests (72hr response)</li>
+          <li class="plan-feature"><span class="check">✓</span> Monthly uptime check</li>
+          <li class="plan-feature"><span class="check">✓</span> Email support</li>
+          <li class="plan-feature"><span class="dim">✗</span> <span style="opacity:0.4">Priority response</span></li>
+          <li class="plan-feature"><span class="dim">✗</span> <span style="opacity:0.4">AI feature maintenance</span></li>
+        </ul>
+        <button class="plan-cta outline" onclick="openModal('Maintenance', '$99/mo', 'basic')">Get Started</button>
+        <div class="plan-secure">🔒 Stripe · Cancel anytime</div>
+      </div>
+
+      <!-- Pro (Featured) -->
+      <div class="plan-card featured">
+        <span class="plan-badge popular">Most Popular</span>
+        <div class="plan-name">Care Plan</div>
+        <div class="plan-price">$199</div>
+        <div class="plan-cycle">per month</div>
+        <div class="plan-tagline">The complete package for active community & business sites.</div>
+        <ul class="plan-features">
+          <li class="plan-feature"><span class="check">✓</span> Up to 6 content updates/mo</li>
+          <li class="plan-feature"><span class="check">✓</span> Priority bug fixes (24hr response)</li>
+          <li class="plan-feature"><span class="check">✓</span> Performance monitoring</li>
+          <li class="plan-feature"><span class="check">✓</span> Minor feature additions</li>
+          <li class="plan-feature"><span class="check">✓</span> Monthly report & recommendations</li>
+          <li class="plan-feature"><span class="check">✓</span> Email + WhatsApp support</li>
+        </ul>
+        <button class="plan-cta solid" onclick="openModal('Care Plan', '$199/mo', 'care')">Subscribe Now</button>
+        <div class="plan-secure">🔒 Stripe · Cancel anytime</div>
+      </div>
+
+      <!-- Growth -->
+      <div class="plan-card">
+        <span class="plan-badge premium">Growth</span>
+        <div class="plan-name">Full Partner</div>
+        <div class="plan-price">$399</div>
+        <div class="plan-cycle">per month</div>
+        <div class="plan-tagline">For organizations growing fast and building new features.</div>
+        <ul class="plan-features">
+          <li class="plan-feature"><span class="check">✓</span> Unlimited content updates</li>
+          <li class="plan-feature"><span class="check">✓</span> Same-day priority support</li>
+          <li class="plan-feature"><span class="check">✓</span> New page / feature development</li>
+          <li class="plan-feature"><span class="check">✓</span> AI feature builds & maintenance</li>
+          <li class="plan-feature"><span class="check">✓</span> Cloud infrastructure oversight</li>
+          <li class="plan-feature"><span class="check">✓</span> Bi-weekly strategy call</li>
+        </ul>
+        <button class="plan-cta amber" onclick="openModal('Full Partner', '$399/mo', 'growth')">Get Started</button>
+        <div class="plan-secure">🔒 Stripe · Cancel anytime</div>
+      </div>
+
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="how-section">
+      <div class="section-heading">How it works</div>
+      <p class="section-sub">Simple, transparent, no surprises.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-title">Choose a Plan</div>
+          <div class="step-desc">Pick the plan that fits your needs and subscribe securely through Stripe in under 2 minutes.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-title">Send Your Requests</div>
+          <div class="step-desc">Email or message me with your updates. I'll confirm and get them done within the agreed timeframe.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-title">Review & Approve</div>
+          <div class="step-desc">I'll show you the changes before going live. You always have final say on everything published.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-title">Billed Monthly</div>
+          <div class="step-desc">Stripe automatically charges on your billing date. No invoices to chase. Cancel anytime, no questions asked.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="section-heading">Common questions</div>
+      <p class="section-sub">Everything you need to know before subscribing.</p>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <div class="faq-q">What counts as a "content update"?</div>
+          <div class="faq-a">Anything you'd want changed on the site — text edits, new photos, event listings, schedule changes, new pages, or form updates. If you're unsure, just ask.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Can I cancel at any time?</div>
+          <div class="faq-a">Yes. Cancel from your Stripe customer portal before your next billing date and you won't be charged again. No fees, no lock-in.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">What if I need more updates than my plan allows?</div>
+          <div class="faq-a">You can upgrade your plan anytime, or I'll quote additional requests as one-off work at a fair rate. I'll always tell you before doing anything outside the plan.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Is my payment information secure?</div>
+          <div class="faq-a">All payments are processed by Stripe — the same platform used by Amazon and Google. Your card details are never stored on my servers.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="contact-strip">
+      <p>Not sure which plan is right for you? Let's talk first.</p>
+      <a href="/cdn-cgi/l/email-protection#563f383039162e33382237377835393b"><span class="__cf_email__" data-cfemail="bfd6d1d9d0ffc7dad1cbdede91dcd0d2">[email&#160;protected]</span></a>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>© 2025 Faisal Ssempagama · Richmond, VA · All rights reserved</footer>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+
+      <div id="form-view">
+        <div class="modal-plan-badge" id="modal-badge">Care Plan</div>
+        <div class="modal-title" id="modal-title">Subscribe</div>
+        <div class="modal-price" id="modal-price">$199 / month · recurring</div>
+
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="f-name" placeholder="e.g. Al-Madina Richmond" />
+
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="f-email" placeholder="admin@example.org" />
+
+        <label class="form-label">Card Details</label>
+        <div id="card-element"></div>
+
+        <button class="submit-btn" id="submit-btn" onclick="handleSubscribe()">
+          Confirm Subscription
+        </button>
+        <div class="modal-footer-note">🔒 Encrypted by Stripe · Cancel anytime from your email</div>
+      </div>
+
+      <div id="success-view" class="success-state" style="display:none;">
+        <div class="success-icon">✅</div>
+        <div class="success-title">You're subscribed!</div>
+        <div class="success-msg">
+          A confirmation has been sent to your email.<br>
+          Faisal will be in touch within 24 hours to get started.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // ═══════════════════════════════════════════════════════
+    // STRIPE SETUP — Replace these values to go live
+    // ═══════════════════════════════════════════════════════
+    //
+    // STEP 1 → Create account at https://stripe.com
+    // STEP 2 → Get your publishable key:
+    //          https://dashboard.stripe.com/apikeys
+    // STEP 3 → Create 3 products with monthly prices:
+    //          https://dashboard.stripe.com/products
+    //          Basic: $99/mo | Care Plan: $199/mo | Growth: $399/mo
+    // STEP 4 → Paste the price IDs below
+    // STEP 5 → Set up a backend (see note below)
+    //
+    const STRIPE_KEY = 'pk_test_REPLACE_WITH_YOUR_KEY';
+
+    const PRICE_IDS = {
+      basic:  'price_REPLACE_BASIC',    // $99/mo
+      care:   'price_REPLACE_CARE',     // $199/mo  ← Al-Madina plan
+      growth: 'price_REPLACE_GROWTH',   // $399/mo
+    };
+    // ═══════════════════════════════════════════════════════
+    // BACKEND NOTE:
+    // You need a small server to create subscriptions.
+    // Easiest options (free tier available):
+    //  • Vercel + Node.js → https://vercel.com
+    //  • Railway → https://railway.app
+    //  • Render → https://render.com
+    //
+    // Your backend endpoint POST /create-subscription should:
+    //  1. Create or find a Stripe Customer by email
+    //  2. Create a Subscription with the priceId
+    //  3. Return { clientSecret } from the payment intent
+    // ═══════════════════════════════════════════════════════
+
+    let stripe, elements, cardEl, activePlan;
+    const DEMO = STRIPE_KEY === 'pk_test_REPLACE_WITH_YOUR_KEY';
+
+    function initStripe() {
+      if (stripe || DEMO) return;
+      stripe = Stripe(STRIPE_KEY);
+      elements = stripe.elements({ fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Geist+Mono' }] });
+      cardEl = elements.create('card', {
+        style: {
+          base: {
+            color: '#1a1714',
+            fontFamily: '"Geist Mono", monospace',
+            fontSize: '14px',
+            letterSpacing: '0.5px',
+            '::placeholder': { color: '#8a7f72' }
+          }
+        }
+      });
+      cardEl.mount('#card-element');
+    }
+
+    function openModal(title, price, plan) {
+      activePlan = plan;
+      document.getElementById('modal-badge').textContent = title;
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-price').textContent = price + ' · recurring monthly';
+      document.getElementById('form-view').style.display = 'block';
+      document.getElementById('success-view').style.display = 'none';
+      document.getElementById('overlay').classList.add('open');
+
+      if (DEMO) {
+        document.getElementById('card-element').innerHTML =
+          '<div style="font-family:\'Geist Mono\',monospace;font-size:0.65rem;color:#8a7f72;padding:10px 0;line-height:1.8;">' +
+          '⚠️ Demo mode — add your Stripe key to enable real payments.<br>' +
+          'See code comments for setup instructions.</div>';
+      } else {
+        setTimeout(initStripe, 50);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('overlay').classList.remove('open');
+    }
+    document.getElementById('overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('overlay')) closeModal();
+    });
+
+    async function handleSubscribe() {
+      const name  = document.getElementById('f-name').value.trim();
+      const email = document.getElementById('f-email').value.trim();
+      const btn   = document.getElementById('submit-btn');
+
+      if (!name || !email) { alert('Please enter your name and email.'); return; }
+
+      if (DEMO) {
+        // Show success for demo
+        document.getElementById('form-view').style.display = 'none';
+        document.getElementById('success-view').style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Processing...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/create-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, priceId: PRICE_IDS[activePlan] })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          if (errData.error === 'already_subscribed') {
+            throw new Error('This email is already on this plan. Contact info@xentaa.com to make changes.');
+          }
+          throw new Error(errData.error || 'Server error — please try again.');
+        }
+        const { clientSecret }
