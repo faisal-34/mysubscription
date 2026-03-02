@@ -7,1295 +7,596 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <script src="https://js.stripe.com/v3/"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
-      --black: #080808;
-      --off-black: #0f0f0f;
-      --card-bg: #111111;
-      --gold: #c9a84c;
-      --gold-light: #e8c96a;
-      --gold-dim: rgba(201,168,76,0.15);
-      --white: #f5f0e8;
-      --muted: #7a7060;
-      --border: rgba(201,168,76,0.18);
-      --font-display: 'Bebas Neue', sans-serif;
-      --font-serif: 'Cormorant Garamond', serif;
-      --font-mono: 'DM Mono', monospace;
+      --black:#080808; --off-black:#0d0d0d; --card-bg:#111111;
+      --gold:#c9a84c; --gold-light:#e8c96a; --gold-dim:rgba(201,168,76,0.12);
+      --white:#f5f0e8; --muted:#7a7060; --border:rgba(201,168,76,0.18);
+      --font-display:'Bebas Neue',sans-serif;
+      --font-serif:'Cormorant Garamond',serif;
+      --font-mono:'DM Mono',monospace;
     }
+    html { scroll-behavior:smooth; }
+    body { background:var(--black); color:var(--white); font-family:var(--font-serif); font-size:18px; line-height:1.7; overflow-x:hidden; cursor:none; }
 
-    html { scroll-behavior: smooth; }
+    /* CURSOR */
+    .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); box-shadow:0 0 16px rgba(201,168,76,0.9); }
+    .cursor-ring { position:fixed; width:38px; height:38px; border:1.5px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:.65; }
+    .cursor.hov { width:6px; height:6px; background:#fff; box-shadow:0 0 10px rgba(255,255,255,0.7); }
+    .cursor-ring.hov { width:54px; height:54px; opacity:.3; }
 
-    body {
-      background: var(--black);
-      color: var(--white);
-      font-family: var(--font-serif);
-      font-size: 18px;
-      line-height: 1.7;
-      overflow-x: hidden;
-      cursor: none;
-    }
-
-    /* Custom cursor */
-    .cursor {
-      position: fixed;
-      width: 8px; height: 8px;
-      background: var(--gold);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translate(-50%, -50%);
-      transition: transform 0.1s ease;
-      mix-blend-mode: difference;
-    }
-    .cursor-ring {
-      position: fixed;
-      width: 36px; height: 36px;
-      border: 1px solid var(--gold);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9998;
-      transform: translate(-50%, -50%);
-      transition: all 0.25s ease;
-      opacity: 0.6;
-    }
-
-    /* Noise overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 1000;
-    }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; z-index:1000; }
 
     /* NAV */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 24px 60px;
-      background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent);
-      backdrop-filter: blur(2px);
-    }
-    .nav-logo {
-      font-family: var(--font-display);
-      font-size: 1.4rem;
-      letter-spacing: 4px;
-      color: var(--gold);
-    }
-    .nav-links { display: flex; gap: 40px; list-style: none; }
-    .nav-links a {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-    .nav-links a:hover { color: var(--gold); }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; justify-content:space-between; align-items:center; padding:22px 60px; background:linear-gradient(to bottom,rgba(8,8,8,.97),transparent); backdrop-filter:blur(4px); }
+    .nav-logo { font-family:var(--font-display); font-size:1.4rem; letter-spacing:4px; color:var(--gold); text-decoration:none; }
+    .nav-links { display:flex; gap:36px; list-style:none; }
+    .nav-links a { font-family:var(--font-mono); font-size:.68rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .25s; cursor:none; }
+    .nav-links a:hover { color:var(--gold); }
+    .nav-hire { font-family:var(--font-mono); font-size:.65rem; letter-spacing:2px; text-transform:uppercase; padding:11px 26px; background:var(--gold); color:var(--black); border:none; cursor:none; text-decoration:none; transition:background .25s; font-weight:500; }
+    .nav-hire:hover { background:var(--gold-light); }
 
     /* HERO */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 0 60px 80px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero-grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
-      background-size: 60px 60px;
-      animation: gridShift 20s linear infinite;
-    }
-    @keyframes gridShift {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(60px); }
-    }
-    .hero-orb {
-      position: absolute;
-      width: 700px; height: 700px;
-      background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
-      top: -200px; right: -200px;
-      border-radius: 50%;
-      animation: orbPulse 8s ease-in-out infinite;
-    }
-    @keyframes orbPulse {
-      0%, 100% { transform: scale(1); opacity: 0.7; }
-      50% { transform: scale(1.1); opacity: 1; }
-    }
-    .hero-tag {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 24px;
-      opacity: 0;
-      animation: fadeUp 0.8s 0.3s forwards;
-    }
-    .hero-name {
-      font-family: var(--font-display);
-      font-size: clamp(5rem, 13vw, 11rem);
-      line-height: 0.9;
-      letter-spacing: 6px;
-      color: var(--white);
-      opacity: 0;
-      animation: fadeUp 0.8s 0.5s forwards;
-    }
-    .hero-name span { color: var(--gold); }
-    .hero-sub {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 1.4rem;
-      color: var(--muted);
-      margin-top: 20px;
-      max-width: 600px;
-      opacity: 0;
-      animation: fadeUp 0.8s 0.7s forwards;
-    }
-    .hero-cta {
-      margin-top: 48px;
-      display: flex;
-      gap: 20px;
-      opacity: 0;
-      animation: fadeUp 0.8s 0.9s forwards;
-    }
-    .btn-primary {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 16px 40px;
-      background: var(--gold);
-      color: var(--black);
-      border: none;
-      cursor: none;
-      text-decoration: none;
-      display: inline-block;
-      transition: background 0.3s, transform 0.2s;
-      font-weight: 500;
-    }
-    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
-    .btn-outline {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 16px 40px;
-      background: transparent;
-      color: var(--gold);
-      border: 1px solid var(--border);
-      cursor: none;
-      text-decoration: none;
-      display: inline-block;
-      transition: border-color 0.3s, transform 0.2s;
-    }
-    .btn-outline:hover { border-color: var(--gold); transform: translateY(-2px); }
-    .hero-scroll {
-      position: absolute;
-      right: 60px;
-      bottom: 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      opacity: 0;
-      animation: fadeIn 1s 1.4s forwards;
-    }
-    .hero-scroll span {
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      writing-mode: vertical-rl;
-    }
-    .scroll-line {
-      width: 1px;
-      height: 60px;
-      background: linear-gradient(to bottom, var(--gold), transparent);
-      animation: scrollLine 2s ease-in-out infinite;
-    }
-    @keyframes scrollLine {
-      0% { transform: scaleY(0); transform-origin: top; }
-      50% { transform: scaleY(1); transform-origin: top; }
-      51% { transform: scaleY(1); transform-origin: bottom; }
-      100% { transform: scaleY(0); transform-origin: bottom; }
-    }
+    .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:flex-end; padding:0 60px 80px; position:relative; overflow:hidden; }
+    .hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px); background-size:60px 60px; animation:gridShift 25s linear infinite; }
+    @keyframes gridShift { 0%{transform:translateY(0)} 100%{transform:translateY(60px)} }
+    .hero-orb { position:absolute; width:800px; height:800px; background:radial-gradient(circle,rgba(201,168,76,.07) 0%,transparent 65%); top:-250px; right:-200px; border-radius:50%; animation:orbPulse 10s ease-in-out infinite; }
+    @keyframes orbPulse { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.08);opacity:1} }
+    .hero-tag { font-family:var(--font-mono); font-size:.68rem; letter-spacing:4px; text-transform:uppercase; color:var(--gold); margin-bottom:20px; opacity:0; animation:fadeUp .8s .3s forwards; position:relative; }
+    .hero-name { font-family:var(--font-display); font-size:clamp(5rem,13vw,11rem); line-height:.9; letter-spacing:6px; color:var(--white); opacity:0; animation:fadeUp .8s .5s forwards; position:relative; }
+    .hero-name span { color:var(--gold); }
+    .hero-sub { font-family:var(--font-serif); font-style:italic; font-size:1.35rem; color:rgba(245,240,232,.55); margin-top:20px; max-width:580px; opacity:0; animation:fadeUp .8s .7s forwards; position:relative; }
+    .hero-cta { margin-top:44px; display:flex; gap:18px; opacity:0; animation:fadeUp .8s .9s forwards; position:relative; }
+    .btn-primary { font-family:var(--font-mono); font-size:.72rem; letter-spacing:3px; text-transform:uppercase; padding:16px 40px; background:var(--gold); color:var(--black); border:none; cursor:none; text-decoration:none; display:inline-block; transition:background .25s,transform .2s; font-weight:500; }
+    .btn-primary:hover { background:var(--gold-light); transform:translateY(-2px); }
+    .btn-outline { font-family:var(--font-mono); font-size:.72rem; letter-spacing:3px; text-transform:uppercase; padding:16px 40px; background:transparent; color:var(--gold); border:1px solid var(--border); cursor:none; text-decoration:none; display:inline-block; transition:all .25s; }
+    .btn-outline:hover { border-color:var(--gold); transform:translateY(-2px); background:var(--gold-dim); }
+    .hero-scroll { position:absolute; right:60px; bottom:80px; display:flex; flex-direction:column; align-items:center; gap:12px; opacity:0; animation:fadeIn 1s 1.4s forwards; }
+    .hero-scroll span { font-family:var(--font-mono); font-size:.6rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); writing-mode:vertical-rl; }
+    .scroll-line { width:1px; height:60px; background:linear-gradient(to bottom,var(--gold),transparent); animation:scrollLine 2s ease-in-out infinite; }
+    @keyframes scrollLine { 0%{transform:scaleY(0);transform-origin:top} 50%{transform:scaleY(1);transform-origin:top} 51%{transform:scaleY(1);transform-origin:bottom} 100%{transform:scaleY(0);transform-origin:bottom} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* SECTION COMMON */
-    section { padding: 120px 60px; position: relative; }
-    .section-label {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .section-label::after {
-      content: '';
-      flex: 1;
-      max-width: 80px;
-      height: 1px;
-      background: var(--border);
-    }
-    .section-title {
-      font-family: var(--font-display);
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      letter-spacing: 4px;
-      line-height: 1.1;
-      margin-bottom: 60px;
-    }
+    /* SECTIONS */
+    section { padding:110px 60px; position:relative; }
+    .section-label { font-family:var(--font-mono); font-size:.65rem; letter-spacing:5px; text-transform:uppercase; color:var(--gold); margin-bottom:16px; display:flex; align-items:center; gap:16px; }
+    .section-label::after { content:''; flex:1; max-width:80px; height:1px; background:var(--border); }
+    .section-title { font-family:var(--font-display); font-size:clamp(2.5rem,5vw,3.8rem); letter-spacing:4px; line-height:1.05; margin-bottom:56px; }
 
     /* ABOUT */
-    .about { background: var(--off-black); }
-    .about-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 80px;
-      align-items: start;
-    }
-    .about-text {
-      font-size: 1.1rem;
-      color: rgba(245,240,232,0.75);
-      line-height: 1.9;
-    }
-    .about-text em { color: var(--gold); font-style: italic; }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px;
-    }
-    .stat-card {
-      background: var(--card-bg);
-      padding: 36px 30px;
-      border-top: 1px solid var(--border);
-    }
-    .stat-number {
-      font-family: var(--font-display);
-      font-size: 3.5rem;
-      color: var(--gold);
-      letter-spacing: 2px;
-      line-height: 1;
-    }
-    .stat-label {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 8px;
-    }
+    .about { background:var(--off-black); }
+    .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:start; }
+    .about-text { font-size:1.05rem; color:rgba(245,240,232,.72); line-height:1.9; }
+    .about-text em { color:var(--gold); font-style:italic; }
+    .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+    .stat-card { background:var(--card-bg); padding:36px 28px; border-top:1px solid var(--border); }
+    .stat-number { font-family:var(--font-display); font-size:3.2rem; color:var(--gold); letter-spacing:2px; line-height:1; }
+    .stat-label { font-family:var(--font-mono); font-size:.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-top:8px; }
 
     /* SKILLS */
-    .skills-track {
-      display: flex;
-      gap: 0;
-      overflow: hidden;
-      margin-bottom: 60px;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .skills-inner {
-      display: flex;
-      gap: 60px;
-      padding: 24px 0;
-      animation: marquee 20s linear infinite;
-      white-space: nowrap;
-    }
-    @keyframes marquee {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
-    }
-    .skill-pill {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-shrink: 0;
-    }
-    .skill-pill::before {
-      content: '◆';
-      color: var(--gold);
-      font-size: 0.5rem;
-    }
+    .skills-track { display:flex; overflow:hidden; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:56px; }
+    .skills-inner { display:flex; gap:56px; padding:22px 0; animation:marquee 22s linear infinite; white-space:nowrap; }
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    .skill-pill { font-family:var(--font-mono); font-size:.68rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:14px; flex-shrink:0; }
+    .skill-pill::before { content:'◆'; color:var(--gold); font-size:.45rem; }
+    .skills-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
+    .skill-block { background:var(--card-bg); padding:28px; border-bottom:2px solid transparent; transition:border-color .3s,background .3s; position:relative; overflow:hidden; }
+    .skill-block::before { content:''; position:absolute; inset:0; background:var(--gold-dim); opacity:0; transition:opacity .3s; }
+    .skill-block:hover { border-bottom-color:var(--gold); }
+    .skill-block:hover::before { opacity:1; }
+    .skill-block-icon { font-size:1.3rem; margin-bottom:14px; }
+    .skill-block-title { font-family:var(--font-mono); font-size:.68rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+    .skill-block-items { font-family:var(--font-mono); font-size:.66rem; color:var(--muted); line-height:2; }
 
-    .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2px;
-    }
-    .skill-block {
-      background: var(--card-bg);
-      padding: 30px;
-      border-bottom: 2px solid transparent;
-      transition: border-color 0.3s, background 0.3s;
-      position: relative;
-      overflow: hidden;
-    }
-    .skill-block::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--gold-dim);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .skill-block:hover { border-bottom-color: var(--gold); }
-    .skill-block:hover::before { opacity: 1; }
-    .skill-block-icon {
-      font-size: 1.4rem;
-      margin-bottom: 16px;
-    }
-    .skill-block-title {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 12px;
-    }
-    .skill-block-items {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--muted);
-      line-height: 2;
-    }
+    /* EXPERIENCE — resume download + arch images */
+    .experience { background:var(--off-black); }
+    .resume-block { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:70px 40px; background:var(--card-bg); border:1px solid var(--border); margin-bottom:60px; text-align:center; position:relative; overflow:hidden; }
+    .resume-block::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(201,168,76,0.05) 0%, transparent 70%); }
+    .resume-icon { font-size:3.5rem; margin-bottom:20px; position:relative; }
+    .resume-title { font-family:var(--font-display); font-size:2.5rem; letter-spacing:4px; color:var(--white); margin-bottom:10px; position:relative; }
+    .resume-sub { font-family:var(--font-serif); font-style:italic; font-size:1.05rem; color:var(--muted); margin-bottom:36px; position:relative; }
+    .resume-btns { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; position:relative; }
+    .btn-download { font-family:var(--font-mono); font-size:.7rem; letter-spacing:3px; text-transform:uppercase; padding:15px 38px; background:var(--gold); color:var(--black); border:none; cursor:none; text-decoration:none; display:inline-flex; align-items:center; gap:10px; transition:background .25s,transform .2s; font-weight:500; }
+    .btn-download:hover { background:var(--gold-light); transform:translateY(-2px); }
+    .btn-linkedin { font-family:var(--font-mono); font-size:.7rem; letter-spacing:3px; text-transform:uppercase; padding:15px 38px; background:transparent; color:var(--gold); border:1px solid var(--border); cursor:none; text-decoration:none; display:inline-flex; align-items:center; gap:10px; transition:all .25s; }
+    .btn-linkedin:hover { border-color:var(--gold); background:var(--gold-dim); transform:translateY(-2px); }
 
-    /* EXPERIENCE */
-    .experience { background: var(--off-black); }
-    .timeline { position: relative; }
-    .timeline::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 1px;
-      background: var(--border);
-    }
-    .timeline-item {
-      padding-left: 50px;
-      padding-bottom: 60px;
-      position: relative;
-      opacity: 0;
-      transform: translateX(-20px);
-      transition: all 0.6s ease;
-    }
-    .timeline-item.visible { opacity: 1; transform: translateX(0); }
-    .timeline-dot {
-      position: absolute;
-      left: -5px;
-      top: 8px;
-      width: 11px;
-      height: 11px;
-      border: 1px solid var(--gold);
-      background: var(--black);
-      border-radius: 50%;
-    }
-    .timeline-date {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 3px;
-      color: var(--gold);
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-    .timeline-company {
-      font-family: var(--font-display);
-      font-size: 1.8rem;
-      letter-spacing: 3px;
-      color: var(--white);
-    }
-    .timeline-role {
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 1rem;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-    .timeline-bullets {
-      list-style: none;
-      font-size: 0.95rem;
-      color: rgba(245,240,232,0.65);
-      line-height: 1.9;
-    }
-    .timeline-bullets li::before {
-      content: '—  ';
-      color: var(--gold);
-      opacity: 0.5;
-    }
+    /* ARCH section */
+    .arch-title { font-family:var(--font-mono); font-size:.65rem; letter-spacing:4px; text-transform:uppercase; color:var(--gold); margin-bottom:20px; }
+    .arch-tabs { display:flex; gap:2px; margin-bottom:0; }
+    .arch-tab { font-family:var(--font-mono); font-size:.62rem; letter-spacing:2px; text-transform:uppercase; padding:12px 28px; background:var(--card-bg); color:var(--muted); border:none; cursor:none; transition:all .25s; border-bottom:2px solid transparent; }
+    .arch-tab.active { color:var(--gold); border-bottom-color:var(--gold); background:#151515; }
+    .arch-tab:hover { color:var(--white); background:#151515; }
+    .arch-panel { display:none; background:var(--card-bg); padding:0; }
+    .arch-panel.active { display:block; }
+    .arch-img { width:100%; display:block; max-height:500px; object-fit:contain; background:#fff; padding:20px; }
+    .arch-caption { font-family:var(--font-mono); font-size:.62rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:16px 24px; border-top:1px solid var(--border); background:var(--off-black); }
+
+    /* CERTS */
+    .certs-panel { display:none; background:var(--card-bg); padding:40px; }
+    .certs-panel.active { display:block; }
+    .certs-row { display:flex; gap:16px; flex-wrap:wrap; }
+    .cert-badge { display:flex; align-items:center; gap:12px; padding:18px 22px; background:rgba(201,168,76,.05); border:1px solid var(--border); border-radius:4px; transition:border-color .25s; }
+    .cert-badge:hover { border-color:var(--gold); }
+    .cert-icon { font-size:1.8rem; }
+    .cert-text { font-family:var(--font-mono); font-size:.6rem; letter-spacing:1px; color:var(--muted); line-height:1.6; }
+    .cert-text strong { color:var(--gold); display:block; font-size:.65rem; margin-bottom:2px; }
 
     /* PROJECTS */
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-    }
-    .project-card {
-      background: var(--card-bg);
-      padding: 50px 40px;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s;
-      display: flex;
-      flex-direction: column;
-    }
-    .project-card::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--gold);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.4s ease;
-    }
-    .project-card:hover::after { transform: scaleX(1); }
-    .project-card:hover { transform: translateY(-4px); }
-    .project-num {
-      font-family: var(--font-display);
-      font-size: 5rem;
-      color: rgba(201,168,76,0.08);
-      line-height: 1;
-      margin-bottom: 20px;
-    }
-    .project-tag {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 12px;
-    }
-    .project-title {
-      font-family: var(--font-display);
-      font-size: 1.6rem;
-      letter-spacing: 3px;
-      margin-bottom: 16px;
-      color: var(--white);
-    }
-    .project-desc {
-      font-size: 0.95rem;
-      color: rgba(245,240,232,0.6);
-      line-height: 1.8;
-      flex: 1;
-    }
-    .project-link {
-      margin-top: 30px;
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--gold);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: gap 0.3s;
-    }
-    .project-link:hover { gap: 18px; }
-    .project-link::after { content: '→'; }
+    .projects-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; }
+    .project-card { background:var(--card-bg); padding:44px 34px; position:relative; overflow:hidden; transition:transform .3s; display:flex; flex-direction:column; }
+    .project-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--gold); transform:scaleX(0); transform-origin:left; transition:transform .4s ease; }
+    .project-card:hover::after { transform:scaleX(1); }
+    .project-card:hover { transform:translateY(-4px); }
+    .project-num { font-family:var(--font-display); font-size:4.5rem; color:rgba(201,168,76,.07); line-height:1; margin-bottom:16px; }
+    .project-tag { font-family:var(--font-mono); font-size:.6rem; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:10px; }
+    .project-title { font-family:var(--font-display); font-size:1.5rem; letter-spacing:3px; margin-bottom:12px; color:var(--white); }
+    .project-desc { font-size:.92rem; color:rgba(245,240,232,.55); line-height:1.8; flex:1; }
+    .project-link { margin-top:24px; font-family:var(--font-mono); font-size:.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--gold); text-decoration:none; display:inline-flex; align-items:center; gap:10px; transition:gap .3s; }
+    .project-link:hover { gap:18px; }
+    .project-link::after { content:'→'; }
 
     /* SERVICES */
-    .services { background: var(--off-black); }
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-    }
-    .service-card {
-      background: var(--card-bg);
-      padding: 50px 40px;
-      position: relative;
-      border-top: 1px solid var(--border);
-      transition: background 0.3s;
-      display: flex;
-      flex-direction: column;
-    }
-    .service-card.featured {
-      background: var(--gold);
-      border-top-color: var(--gold);
-    }
-    .service-card.featured .service-price,
-    .service-card.featured .service-title,
-    .service-card.featured .service-desc,
-    .service-card.featured .service-feature {
-      color: var(--black);
-    }
-    .service-card.featured .service-badge {
-      background: var(--black);
-      color: var(--gold);
-    }
-    .service-badge {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      background: var(--gold-dim);
-      color: var(--gold);
-      border-radius: 2px;
-      margin-bottom: 24px;
-    }
-    .service-price {
-      font-family: var(--font-display);
-      font-size: 3.5rem;
-      letter-spacing: 2px;
-      color: var(--white);
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .service-price-sub {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 2px;
-      margin-bottom: 24px;
-    }
-    .service-card.featured .service-price-sub { color: rgba(8,8,8,0.6); }
-    .service-title {
-      font-family: var(--font-serif);
-      font-size: 1.4rem;
-      font-style: italic;
-      color: var(--white);
-      margin-bottom: 20px;
-    }
-    .service-desc {
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.8;
-      margin-bottom: 28px;
-    }
-    .service-features {
-      list-style: none;
-      margin-bottom: 40px;
-      flex: 1;
-    }
-    .service-feature {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--muted);
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(201,168,76,0.1);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .service-card.featured .service-feature { border-bottom-color: rgba(8,8,8,0.15); }
-    .service-feature::before { content: '✓'; color: var(--gold); }
-    .service-card.featured .service-feature::before { color: var(--black); }
-    .stripe-btn {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 16px 30px;
-      border: none;
-      cursor: none;
-      width: 100%;
-      transition: all 0.3s;
-      font-weight: 500;
-    }
-    .stripe-btn-light {
-      background: transparent;
-      color: var(--gold);
-      border: 1px solid var(--border);
-    }
-    .stripe-btn-light:hover { background: var(--gold-dim); border-color: var(--gold); }
-    .stripe-btn-dark {
-      background: var(--black);
-      color: var(--gold);
-    }
-    .stripe-btn-dark:hover { background: #1a1a1a; }
-    .stripe-secure {
-      text-align: center;
-      margin-top: 12px;
-      font-family: var(--font-mono);
-      font-size: 0.58rem;
-      color: var(--muted);
-      letter-spacing: 2px;
-    }
-    .service-card.featured .stripe-secure { color: rgba(8,8,8,0.5); }
+    .services { background:var(--off-black); }
+    .svc-selector-label { font-family:var(--font-mono); font-size:.65rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+    .svc-btns { display:flex; gap:2px; flex-wrap:wrap; margin-bottom:2px; }
+    .svc-btn { font-family:var(--font-mono); font-size:.66rem; letter-spacing:2px; text-transform:uppercase; padding:14px 26px; background:var(--card-bg); color:var(--muted); border:none; cursor:none; transition:all .25s; border-bottom:2px solid transparent; }
+    .svc-btn:hover { color:var(--white); background:#151515; }
+    .svc-btn.active { color:var(--gold); border-bottom-color:var(--gold); background:#151515; }
+    .svc-btn .stag { font-size:.55rem; color:var(--muted); display:block; margin-top:3px; }
+    .svc-btn.active .stag { color:rgba(201,168,76,.7); }
+    .svc-panel { display:none; animation:fadeIn .3s ease; }
+    .svc-panel.active { display:block; }
+    .svc-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+    .svc-left { background:var(--card-bg); padding:48px 42px; }
+    .svc-right { background:#0d0d0d; padding:48px 42px; border:1px solid var(--border); }
+    .svc-badge { display:inline-block; font-family:var(--font-mono); font-size:.58rem; letter-spacing:3px; text-transform:uppercase; padding:4px 12px; background:var(--gold-dim); color:var(--gold); margin-bottom:20px; }
+    .svc-price { font-family:var(--font-display); font-size:4.5rem; letter-spacing:2px; color:var(--white); line-height:1; }
+    .svc-cycle { font-family:var(--font-mono); font-size:.62rem; color:var(--muted); letter-spacing:2px; margin-bottom:18px; }
+    .svc-name { font-family:var(--font-display); font-size:2rem; letter-spacing:4px; color:var(--gold); margin-bottom:8px; }
+    .svc-desc { font-family:var(--font-serif); font-style:italic; font-size:1rem; color:rgba(245,240,232,.5); margin-bottom:28px; }
+    .svc-feats { list-style:none; margin-bottom:32px; }
+    .svc-feat { font-family:var(--font-mono); font-size:.65rem; color:rgba(245,240,232,.65); padding:10px 0; border-bottom:1px solid rgba(201,168,76,.07); display:flex; align-items:center; gap:12px; }
+    .svc-feat::before { content:'✓'; color:var(--gold); flex-shrink:0; }
+    .svc-cta { width:100%; padding:17px; background:var(--gold); color:var(--black); font-family:var(--font-mono); font-size:.7rem; letter-spacing:3px; text-transform:uppercase; border:none; cursor:none; font-weight:500; transition:background .25s; display:block; text-align:center; text-decoration:none; }
+    .svc-cta:hover { background:var(--gold-light); }
+    .svc-cta-outline { width:100%; padding:17px; background:transparent; color:var(--gold); font-family:var(--font-mono); font-size:.7rem; letter-spacing:3px; text-transform:uppercase; border:1px solid var(--border); cursor:none; font-weight:500; transition:all .25s; display:block; text-align:center; text-decoration:none; }
+    .svc-cta-outline:hover { background:var(--gold-dim); border-color:var(--gold); }
+    .svc-secure { font-family:var(--font-mono); font-size:.58rem; color:var(--muted); text-align:center; margin-top:10px; letter-spacing:1px; }
+    .svc-rtitle { font-family:var(--font-mono); font-size:.62rem; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:24px; }
+    .svc-steps { list-style:none; }
+    .svc-step { padding:14px 0; border-bottom:1px solid rgba(201,168,76,.06); display:flex; gap:16px; align-items:flex-start; }
+    .svc-step-num { font-family:var(--font-display); font-size:2rem; color:rgba(201,168,76,.18); line-height:1; flex-shrink:0; min-width:34px; }
+    .svc-step-label { font-family:var(--font-mono); font-size:.62rem; letter-spacing:2px; text-transform:uppercase; color:var(--white); margin-bottom:4px; }
+    .svc-step-desc { font-family:var(--font-mono); font-size:.62rem; color:var(--muted); line-height:1.6; }
 
     /* CONTACT */
-    .contact-inner {
-      max-width: 800px;
-      margin: 0 auto;
-      text-align: center;
-    }
-    .contact-inner .section-label { justify-content: center; }
-    .contact-inner .section-label::after { display: none; }
-    .contact-email {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 5vw, 4rem);
-      letter-spacing: 4px;
-      color: var(--gold);
-      text-decoration: none;
-      display: block;
-      margin: 24px 0 48px;
-      transition: letter-spacing 0.4s;
-    }
-    .contact-email:hover { letter-spacing: 8px; }
-    .contact-links {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-    }
-    .contact-link {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-    .contact-link:hover { color: var(--gold); }
+    .contact-inner { max-width:760px; margin:0 auto; text-align:center; }
+    .contact-inner .section-label { justify-content:center; }
+    .contact-inner .section-label::after { display:none; }
+    .contact-email { font-family:var(--font-display); font-size:clamp(2rem,5vw,3.8rem); letter-spacing:4px; color:var(--gold); text-decoration:none; display:block; margin:20px 0 44px; transition:letter-spacing .4s; }
+    .contact-email:hover { letter-spacing:8px; }
+    .contact-links { display:flex; justify-content:center; gap:36px; flex-wrap:wrap; }
+    .contact-link { font-family:var(--font-mono); font-size:.66rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .25s; padding:10px 0; }
+    .contact-link:hover { color:var(--gold); }
 
     /* FOOTER */
-    footer {
-      padding: 30px 60px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .footer-copy {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      color: var(--muted);
-      letter-spacing: 2px;
-    }
-    .footer-badge {
-      font-family: var(--font-mono);
-      font-size: 0.62rem;
-      color: var(--muted);
-      letter-spacing: 2px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .footer-badge::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #4caf7d;
-      animation: blink 2s ease-in-out infinite;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
+    footer { padding:28px 60px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .footer-copy { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); letter-spacing:2px; }
+    .footer-badge { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); letter-spacing:2px; display:flex; align-items:center; gap:8px; }
+    .footer-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:#4caf7d; animation:blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-    /* Stripe modal */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      z-index: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-      backdrop-filter: blur(6px);
+    .hamburger { display:none; }
+    @media(max-width:1100px){
+      .skills-grid { grid-template-columns:repeat(2,1fr); }
+      .about-grid { gap:40px; }
     }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 60px;
-      max-width: 480px;
-      width: 90%;
-      transform: translateY(30px);
-      transition: transform 0.3s;
-      position: relative;
-    }
-    .modal-overlay.open .modal-box { transform: translateY(0); }
-    .modal-close {
-      position: absolute;
-      top: 20px; right: 24px;
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 1.4rem;
-      cursor: none;
-      transition: color 0.2s;
-    }
-    .modal-close:hover { color: var(--gold); }
-    .modal-title {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      letter-spacing: 4px;
-      color: var(--white);
-      margin-bottom: 8px;
-    }
-    .modal-plan {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 30px;
-    }
-    .modal-input {
-      width: 100%;
-      background: var(--black);
-      border: 1px solid var(--border);
-      color: var(--white);
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      padding: 14px 18px;
-      margin-bottom: 14px;
-      outline: none;
-      transition: border-color 0.3s;
-      letter-spacing: 1px;
-    }
-    .modal-input:focus { border-color: var(--gold); }
-    .modal-input::placeholder { color: var(--muted); }
-    .modal-submit {
-      width: 100%;
-      padding: 16px;
-      background: var(--gold);
-      color: var(--black);
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      border: none;
-      cursor: none;
-      font-weight: 500;
-      transition: background 0.3s;
-      margin-top: 6px;
-    }
-    .modal-submit:hover { background: var(--gold-light); }
-    .modal-note {
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      color: var(--muted);
-      letter-spacing: 2px;
-      text-align: center;
-      margin-top: 16px;
-    }
-    #stripe-card-element {
-      background: var(--black);
-      border: 1px solid var(--border);
-      padding: 14px 18px;
-      margin-bottom: 14px;
-      transition: border-color 0.3s;
-    }
-    #stripe-card-element.focused { border-color: var(--gold); }
+    /* ── MOBILE ── */
+    @media(max-width:768px){
+      .cursor,.cursor-ring,.hero-scroll { display:none; }
+      body { cursor:auto; }
 
-    /* RESPONSIVE */
-    @media (max-width: 900px) {
-      nav { padding: 20px 30px; }
-      .nav-links { display: none; }
-      section { padding: 80px 30px; }
-      .hero { padding: 0 30px 60px; }
-      .about-grid { grid-template-columns: 1fr; gap: 40px; }
-      .skills-grid { grid-template-columns: 1fr 1fr; }
-      .projects-grid { grid-template-columns: 1fr; }
-      .services-grid { grid-template-columns: 1fr; }
-      footer { padding: 20px 30px; flex-direction: column; gap: 12px; }
-      .hero-scroll { display: none; }
+      /* NAV — hamburger */
+      nav { padding:16px 20px; }
+      .nav-links { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(8,8,8,.98); flex-direction:column; align-items:center; justify-content:center; gap:36px; z-index:200; }
+      .nav-links.open { display:flex; }
+      .nav-links a { font-size:.9rem; }
+      .nav-hire { display:none; }
+      .hamburger { display:flex; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:4px; z-index:201; }
+      .hamburger span { display:block; width:24px; height:2px; background:var(--gold); transition:all .3s; }
+      .hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+      .hamburger.open span:nth-child(2) { opacity:0; }
+      .hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+      /* HERO */
+      .hero { padding:0 20px 60px; min-height:100svh; }
+      .hero-name { font-size:clamp(3.5rem,18vw,6rem); letter-spacing:2px; }
+      .hero-sub { font-size:1rem; }
+      .hero-cta { flex-direction:column; gap:12px; }
+      .btn-primary, .btn-outline { width:100%; text-align:center; padding:15px 20px; }
+
+      /* SECTIONS */
+      section { padding:60px 20px; }
+      .section-title { font-size:clamp(2rem,8vw,3rem); margin-bottom:36px; }
+
+      /* ABOUT */
+      .about-grid { grid-template-columns:1fr; gap:32px; }
+      .stats-grid { grid-template-columns:1fr 1fr; gap:2px; }
+      .stat-number { font-size:2.4rem; }
+
+      /* SKILLS */
+      .skills-grid { grid-template-columns:1fr 1fr; gap:2px; }
+      .skill-block { padding:20px; }
+
+      /* EXPERIENCE */
+      .resume-block { padding:40px 20px; }
+      .resume-title { font-size:1.8rem; }
+      .resume-btns { flex-direction:column; gap:10px; }
+      .btn-download, .btn-linkedin { width:100%; text-align:center; justify-content:center; }
+      /* Arch tabs scroll horizontally */
+      .arch-tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; padding-bottom:2px; }
+      .arch-tab { white-space:nowrap; flex-shrink:0; padding:10px 18px; }
+      .arch-img { max-height:260px; }
+      .certs-panel { padding:24px 20px; }
+      .certs-row { flex-direction:column; gap:12px; }
+      .cert-badge { width:100%; }
+
+      /* PROJECTS */
+      .projects-grid { grid-template-columns:1fr; }
+
+      /* SERVICES */
+      .svc-btns { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; padding-bottom:2px; }
+      .svc-btn { white-space:nowrap; flex-shrink:0; padding:12px 18px; }
+      .svc-grid { grid-template-columns:1fr; }
+      .svc-left,.svc-right { padding:28px 22px; }
+
+      /* CONTACT */
+      .contact-links { flex-direction:column; gap:16px; align-items:center; }
+
+      /* FOOTER */
+      footer { padding:20px; flex-direction:column; gap:10px; text-align:center; }
+    }
+    @media(max-width:400px){
+      .hero-name { font-size:3rem; }
+      .stats-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
 <body>
-
   <div class="cursor" id="cursor"></div>
-  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="cursor-ring" id="ring"></div>
 
-  <!-- NAV -->
   <nav>
-    <div class="nav-logo">FS</div>
-    <ul class="nav-links">
-      <li><a href="#about">About</a></li>
-      <li><a href="#skills">Skills</a></li>
-      <li><a href="#experience">Experience</a></li>
-      <li><a href="#projects">Projects</a></li>
-      <li><a href="subscribe.html">Services</a></li>
-      <li><a href="#contact">Contact</a></li>
+    <a href="#" class="nav-logo">FS</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about" onclick="closeNav()">About</a></li>
+      <li><a href="#skills" onclick="closeNav()">Skills</a></li>
+      <li><a href="#experience" onclick="closeNav()">Experience</a></li>
+      <li><a href="#projects" onclick="closeNav()">Projects</a></li>
+      <li><a href="#services" onclick="closeNav()">Services</a></li>
+      <li><a href="#contact" onclick="closeNav()">Contact</a></li>
     </ul>
+    <a href="mailto:info@xentaa.com?subject=Hire%20Inquiry%20from%20Portfolio&body=Hi%20Faisal%2C%0A%0AI%20came%20across%20your%20portfolio%20and%20I%27m%20interested%20in%20working%20with%20you.%0A%0AName%3A%0ACompany%3A%0AProject%20details%3A%0A" class="nav-hire">Hire Me</a>
+    <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
 
-  <!-- HERO -->
   <section class="hero">
     <div class="hero-grid"></div>
     <div class="hero-orb"></div>
-    <p class="hero-tag">Systems & Cloud Engineer — Richmond, VA</p>
+    <p class="hero-tag">Systems &amp; Cloud Engineer — Richmond, VA</p>
     <h1 class="hero-name">FAISAL<br><span>SSEMPAGAMA</span></h1>
-    <p class="hero-sub">7+ years building resilient enterprise infrastructure across AWS, Azure, Linux & VMware.</p>
+    <p class="hero-sub">7+ years building resilient enterprise infrastructure across AWS, Azure, Linux &amp; VMware.</p>
     <div class="hero-cta">
-      <a href="#services" class="btn-primary">Hire Me</a>
-      <a href="#experience" class="btn-outline">View Work</a>
+      <a href="mailto:info@xentaa.com?subject=Hire%20Inquiry%20from%20Portfolio&body=Hi%20Faisal%2C%0A%0AI%20came%20across%20your%20portfolio%20and%20I%27m%20interested%20in%20working%20with%20you.%0A%0AName%3A%0ACompany%3A%0AProject%20details%3A%0A" class="btn-primary">Hire Me</a>
+      <a href="#experience" class="btn-outline">My Journey</a>
     </div>
-    <div class="hero-scroll">
-      <div class="scroll-line"></div>
-      <span>Scroll</span>
-    </div>
+    <div class="hero-scroll"><div class="scroll-line"></div><span>Scroll</span></div>
   </section>
 
-  <!-- ABOUT -->
   <section class="about" id="about">
     <div class="section-label">01 — About</div>
     <div class="about-grid">
       <div>
         <h2 class="section-title">Engineer.<br>Builder.<br><em style="color:var(--gold)">Architect.</em></h2>
-        <p class="about-text">
-          I design and operate high-availability infrastructure that enterprises trust with their most critical workloads. 
-          From bare-metal provisioning to cloud-native automation, I bridge the gap between <em>on-premises complexity</em> and 
-          <em>cloud-scale agility</em>.<br><br>
-          Beyond the enterprise, I build AI-powered web applications — including 
-          <em><a href="https://almadinarichmond.org" target="_blank" style="color:var(--gold);text-decoration:none;">almadinarichmond.org</a></em> — 
-          combining cloud infrastructure expertise with modern AI tooling to deliver real-world solutions for real communities.
-        </p>
+        <p class="about-text">I design and operate high-availability infrastructure enterprises trust with their most critical workloads. From bare-metal provisioning to cloud-native automation, I bridge the gap between <em>on-premises complexity</em> and <em>cloud-scale agility</em>.<br><br>Beyond the enterprise, I build AI-powered web applications — including <em><a href="https://almadinarichmond.org" target="_blank" style="color:var(--gold);text-decoration:none;">almadinarichmond.org</a></em> — combining cloud infrastructure expertise with modern AI tooling to deliver real-world solutions for real communities.</p>
       </div>
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number">7+</div>
-          <div class="stat-label">Years Experience</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">5</div>
-          <div class="stat-label">Companies Served</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">AWS</div>
-          <div class="stat-label">Certified Architect</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">99%</div>
-          <div class="stat-label">Uptime Target</div>
-        </div>
+        <div class="stat-card"><div class="stat-number">7+</div><div class="stat-label">Years Experience</div></div>
+        <div class="stat-card"><div class="stat-number">5</div><div class="stat-label">Companies Served</div></div>
+        <div class="stat-card"><div class="stat-number">AWS</div><div class="stat-label">Certified Architect</div></div>
+        <div class="stat-card"><div class="stat-number">99%</div><div class="stat-label">Uptime Target</div></div>
       </div>
     </div>
   </section>
 
-  <!-- SKILLS -->
-  <section id="skills" style="padding-bottom: 60px;">
+  <section id="skills" style="padding-bottom:60px;">
     <div class="section-label">02 — Expertise</div>
     <h2 class="section-title">Core Skills</h2>
-
-    <div class="skills-track">
-      <div class="skills-inner" id="marqueeInner">
-        <span class="skill-pill">AWS EC2 / S3 / VPC</span>
-        <span class="skill-pill">Azure VMs & Networking</span>
-        <span class="skill-pill">Linux RHEL / Ubuntu</span>
-        <span class="skill-pill">VMware ESXi / vSphere</span>
-        <span class="skill-pill">Terraform</span>
-        <span class="skill-pill">Ansible</span>
-        <span class="skill-pill">Active Directory</span>
-        <span class="skill-pill">Bash & Python</span>
-        <span class="skill-pill">SolarWinds / Nagios</span>
-        <span class="skill-pill">Office 365</span>
-        <span class="skill-pill">SAN / LVM / RAID</span>
-        <span class="skill-pill">CloudWatch / Prometheus</span>
-        <span class="skill-pill">AWS EC2 / S3 / VPC</span>
-        <span class="skill-pill">Azure VMs & Networking</span>
-        <span class="skill-pill">Linux RHEL / Ubuntu</span>
-        <span class="skill-pill">VMware ESXi / vSphere</span>
-        <span class="skill-pill">Terraform</span>
-        <span class="skill-pill">Ansible</span>
-        <span class="skill-pill">Active Directory</span>
-        <span class="skill-pill">Bash & Python</span>
-      </div>
-    </div>
-
+    <div class="skills-track"><div class="skills-inner">
+      <span class="skill-pill">AWS EC2 / S3 / VPC</span><span class="skill-pill">Azure VMs &amp; Networking</span><span class="skill-pill">Linux RHEL / Ubuntu</span><span class="skill-pill">VMware ESXi / vSphere</span><span class="skill-pill">Terraform</span><span class="skill-pill">Ansible</span><span class="skill-pill">Active Directory</span><span class="skill-pill">Bash &amp; Python</span><span class="skill-pill">SolarWinds / Nagios</span><span class="skill-pill">Office 365</span><span class="skill-pill">SAN / LVM / RAID</span><span class="skill-pill">CloudWatch / Prometheus</span><span class="skill-pill">AWS EC2 / S3 / VPC</span><span class="skill-pill">Azure VMs &amp; Networking</span><span class="skill-pill">Linux RHEL / Ubuntu</span><span class="skill-pill">VMware ESXi / vSphere</span>
+    </div></div>
     <div class="skills-grid">
-      <div class="skill-block">
-        <div class="skill-block-icon">☁️</div>
-        <div class="skill-block-title">Cloud & Virtualization</div>
-        <div class="skill-block-items">AWS (EC2, S3, RDS, VPC)<br>Azure VMs & Storage<br>VMware ESXi / vSphere<br>Cloud Networking</div>
-      </div>
-      <div class="skill-block">
-        <div class="skill-block-icon">🖥️</div>
-        <div class="skill-block-title">Server & Storage</div>
-        <div class="skill-block-items">Windows Server<br>Linux (RHEL, Ubuntu)<br>SAN, LVM, RAID, NFS<br>Hardware Lifecycle</div>
-      </div>
-      <div class="skill-block">
-        <div class="skill-block-icon">⚙️</div>
-        <div class="skill-block-title">Automation & IaC</div>
-        <div class="skill-block-items">Terraform<br>Ansible<br>Bash Scripting<br>Python</div>
-      </div>
-      <div class="skill-block">
-        <div class="skill-block-icon">🔐</div>
-        <div class="skill-block-title">Identity & Security</div>
-        <div class="skill-block-items">Active Directory / Entra<br>IAM & RBAC<br>Patch Management<br>Vulnerability Remediation</div>
-      </div>
-      <div class="skill-block">
-        <div class="skill-block-icon">📊</div>
-        <div class="skill-block-title">Monitoring & Ops</div>
-        <div class="skill-block-items">CloudWatch<br>SolarWinds / Nagios<br>Prometheus<br>Incident Response</div>
-      </div>
-      <div class="skill-block">
-        <div class="skill-block-icon">💾</div>
-        <div class="skill-block-title">Backup & DR</div>
-        <div class="skill-block-items">Snapshot Management<br>Backup Automation<br>Recovery Testing<br>Business Resumption</div>
-      </div>
-      <div class="skill-block">
-        <div class="skill-block-icon">📧</div>
-        <div class="skill-block-title">Collaboration</div>
-        <div class="skill-block-items">Office 365<br>Exchange / SharePoint<br>Teams<br>Entra / Azure AD</div>
-      </div>
-      <div class="skill-block">
-        <div class="skill-block-icon">🤖</div>
-        <div class="skill-block-title">AI & Web</div>
-        <div class="skill-block-items">AI Website Development<br>Model Validation<br>Data Annotation<br>QA Workflows</div>
-      </div>
+      <div class="skill-block"><div class="skill-block-icon">☁️</div><div class="skill-block-title">Cloud &amp; Virtualization</div><div class="skill-block-items">AWS (EC2, S3, RDS, VPC)<br>Azure VMs &amp; Storage<br>VMware ESXi / vSphere<br>Cloud Networking</div></div>
+      <div class="skill-block"><div class="skill-block-icon">🖥️</div><div class="skill-block-title">Server &amp; Storage</div><div class="skill-block-items">Windows Server<br>Linux (RHEL, Ubuntu)<br>SAN, LVM, RAID, NFS<br>Hardware Lifecycle</div></div>
+      <div class="skill-block"><div class="skill-block-icon">⚙️</div><div class="skill-block-title">Automation &amp; IaC</div><div class="skill-block-items">Terraform<br>Ansible<br>Bash Scripting<br>Python</div></div>
+      <div class="skill-block"><div class="skill-block-icon">🔐</div><div class="skill-block-title">Identity &amp; Security</div><div class="skill-block-items">Active Directory / Entra<br>IAM &amp; RBAC<br>Patch Management<br>Vulnerability Remediation</div></div>
+      <div class="skill-block"><div class="skill-block-icon">📊</div><div class="skill-block-title">Monitoring &amp; Ops</div><div class="skill-block-items">CloudWatch<br>SolarWinds / Nagios<br>Prometheus<br>Incident Response</div></div>
+      <div class="skill-block"><div class="skill-block-icon">💾</div><div class="skill-block-title">Backup &amp; DR</div><div class="skill-block-items">Snapshot Management<br>Backup Automation<br>Recovery Testing<br>Business Resumption</div></div>
+      <div class="skill-block"><div class="skill-block-icon">📧</div><div class="skill-block-title">Collaboration</div><div class="skill-block-items">Office 365<br>Exchange / SharePoint<br>Teams<br>Entra / Azure AD</div></div>
+      <div class="skill-block"><div class="skill-block-icon">🤖</div><div class="skill-block-title">AI &amp; Web</div><div class="skill-block-items">AI Website Development<br>Model Validation<br>Data Annotation<br>QA Workflows</div></div>
     </div>
   </section>
 
-  <!-- EXPERIENCE -->
   <section class="experience" id="experience">
     <div class="section-label">03 — Journey</div>
-    <h2 class="section-title">Experience</h2>
-    <div class="timeline">
+    <h2 class="section-title">Experience &amp;<br>Architecture</h2>
 
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-date">Sep 2025 — Present</div>
-        <div class="timeline-company">HANDSHAKE</div>
-        <div class="timeline-role">MOVE Fellow</div>
-        <ul class="timeline-bullets">
-          <li>Training and evaluation of AI systems via structured data annotation and model validation</li>
-          <li>Root-cause analysis on quality issues with documented findings and recommendations</li>
-          <li>Cross-functional workflow refinement and quality standards documentation</li>
-        </ul>
+    <!-- RESUME DOWNLOAD BLOCK -->
+    <div class="resume-block">
+      <div class="resume-icon">📄</div>
+      <div class="resume-title">MY RESUME</div>
+      <div class="resume-sub">7+ years across Microsoft, Virginia State University, Costco &amp; more.<br>AWS Certified · Linux Professional · M.S. Information Technology (in progress)</div>
+      <div class="resume-btns">
+        <a href="Faisal-Ssempagama-Resume.pdf" download="Faisal-Ssempagama-Resume.pdf" class="btn-download">
+          ⬇ Download Resume
+        </a>
+        <a href="https://linkedin.com/in/faisalssempagama" target="_blank" rel="noopener" class="btn-linkedin">
+          LinkedIn Profile →
+        </a>
       </div>
+    </div>
 
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-date">Feb 2024 — Feb 2025</div>
-        <div class="timeline-company">MICROSOFT</div>
-        <div class="timeline-role">Azure Support Engineer (Contract)</div>
-        <ul class="timeline-bullets">
-          <li>Administered Linux/Windows VMs, storage, and backup configurations to availability SLAs</li>
-          <li>Resolved incidents involving identity, networking, storage, and access control</li>
-          <li>Automated provisioning, disk configuration, patching, and backup workflows</li>
-        </ul>
+    <!-- ARCHITECTURE IMAGES -->
+    <div class="arch-title">Technology Architecture I Work With</div>
+    <div class="arch-tabs">
+      <button class="arch-tab active" onclick="showArch(this,'arch-aws1')">AWS Pipeline &amp; Org</button>
+      <button class="arch-tab" onclick="showArch(this,'arch-aws2')">AWS Multi-Account</button>
+      <button class="arch-tab" onclick="showArch(this,'arch-azure')">Azure Data Architecture</button>
+      <button class="arch-tab" onclick="showArch(this,'arch-certs')">Certifications</button>
+    </div>
+
+    <div class="arch-panel active" id="arch-aws1">
+      <img src="aws-arch-1.png" alt="AWS CodePipeline, Organizations and Security Architecture" class="arch-img" />
+      <div class="arch-caption">AWS Cloud — CodePipeline · Organizations · GuardDuty · CloudTrail · SSO · VPC Architecture</div>
+    </div>
+    <div class="arch-panel" id="arch-aws2">
+      <img src="aws-arch-2.png" alt="AWS Multi-Account Architecture with Lambda, DynamoDB and IoT" class="arch-img" />
+      <div class="arch-caption">AWS Multi-Account — Root · Audit · Monitoring · Deployment · Tenant Accounts · Serverless Services</div>
+    </div>
+    <div class="arch-panel" id="arch-azure">
+      <img src="azure-arch.webp" alt="Azure Data Lake and Synapse Analytics Architecture" class="arch-img" />
+      <div class="arch-caption">Azure — Synapse Analytics Pipeline · Data Lake Storage · Apache Spark · Cosmos DB · Power BI</div>
+    </div>
+    <div class="certs-panel" id="arch-certs">
+      <div class="certs-row">
+        <div class="cert-badge"><div class="cert-icon">🏆</div><div class="cert-text"><strong>AWS Certified</strong>Solutions Architect – Associate<br>Valid 2023 – 2026</div></div>
+        <div class="cert-badge"><div class="cert-icon">🐧</div><div class="cert-text"><strong>LPI Certified</strong>Linux Professional Institute<br>LPIC Certification</div></div>
+        <div class="cert-badge"><div class="cert-icon">🤖</div><div class="cert-text"><strong>Model Validation 2</strong>Expert Level — Handshake<br>Issued 2025</div></div>
+        <div class="cert-badge"><div class="cert-icon">🎓</div><div class="cert-text"><strong>M.S. Information Tech</strong>Univ. of Maryland Global Campus<br>2025 – 2027</div></div>
       </div>
-
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-date">Oct 2021 — Feb 2024</div>
-        <div class="timeline-company">VA STATE UNIV.</div>
-        <div class="timeline-role">Server Systems Engineer</div>
-        <ul class="timeline-bullets">
-          <li>Designed and administered server/storage environments with high availability across cloud and on-prem</li>
-          <li>Managed VMware ESXi clusters — upgrades, configuration changes, and security patching</li>
-          <li>Implemented backup, recovery, and monitoring supporting DR and business resumption</li>
-        </ul>
-      </div>
-
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-date">May 2020 — Oct 2021</div>
-        <div class="timeline-company">COSTCO</div>
-        <div class="timeline-role">Linux System Administrator</div>
-        <ul class="timeline-bullets">
-          <li>Installed, configured, and maintained Linux servers in production environments</li>
-          <li>Monitoring, patching, backup verification, and vendor coordination</li>
-        </ul>
-      </div>
-
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-date">Aug 2017 — Mar 2020</div>
-        <div class="timeline-company">CARE ADVANTAGE</div>
-        <div class="timeline-role">Unix/Linux System Administrator</div>
-        <ul class="timeline-bullets">
-          <li>Administered servers, storage, and backups for business-critical applications</li>
-          <li>Health checks, vulnerability remediation, access control, and DR testing</li>
-        </ul>
-      </div>
-
     </div>
   </section>
 
-  <!-- PROJECTS -->
   <section id="projects">
     <div class="section-label">04 — Work</div>
     <h2 class="section-title">Side Projects</h2>
     <div class="projects-grid">
       <div class="project-card">
-        <div class="project-num">01</div>
-        <div class="project-tag">AI Web Platform</div>
+        <div class="project-num">01</div><div class="project-tag">AI Web Platform</div>
         <div class="project-title">AL-MADINA RICHMOND</div>
-        <p class="project-desc">
-          A full-stack AI-powered web platform serving the Richmond Muslim community. Built with modern web technologies, 
-          integrated AI assistance, and cloud infrastructure for reliability and scale.
-        </p>
-        <a href="https://almadinarichmond.org" target="_blank" class="project-link">Visit Site</a>
+        <p class="project-desc">A full-stack AI-powered web platform serving the Richmond Muslim community. Built with modern web technologies, integrated AI assistance, and cloud infrastructure for reliability and scale.</p>
+        <a href="https://almadinarichmond.org" target="_blank" rel="noopener" class="project-link">Visit Site</a>
       </div>
       <div class="project-card">
-        <div class="project-num">02</div>
-        <div class="project-tag">Cloud Automation</div>
+        <div class="project-num">02</div><div class="project-tag">Cloud Automation</div>
         <div class="project-title">INFRASTRUCTURE AS CODE</div>
-        <p class="project-desc">
-          Terraform and Ansible automation frameworks for repeatable, auditable infrastructure deployments across 
-          AWS and Azure — reducing provisioning time and eliminating configuration drift.
-        </p>
-        <a href="#contact" class="project-link">Learn More</a>
+        <p class="project-desc">Terraform and Ansible automation frameworks for repeatable, auditable infrastructure deployments across AWS and Azure — reducing provisioning time and eliminating configuration drift.</p>
+        <a href="mailto:info@xentaa.com?subject=IaC%20Automation%20Inquiry" class="project-link">Learn More</a>
       </div>
       <div class="project-card">
-        <div class="project-num">03</div>
-        <div class="project-tag">AI Tooling</div>
+        <div class="project-num">03</div><div class="project-tag">AI Tooling</div>
         <div class="project-title">AI WEBSITE BUILDER</div>
-        <p class="project-desc">
-          Developing custom AI-powered websites for small businesses and community organizations — combining 
-          intelligent interfaces with robust cloud backends for meaningful local impact.
-        </p>
-        <a href="#contact" class="project-link">Request a Build</a>
+        <p class="project-desc">Developing custom AI-powered websites for small businesses and community organizations — combining intelligent interfaces with robust cloud backends for meaningful local impact.</p>
+        <a href="mailto:info@xentaa.com?subject=AI%20Website%20Build%20Request" class="project-link">Request a Build</a>
       </div>
     </div>
   </section>
 
-  <!-- SERVICES / STRIPE -->
   <section class="services" id="services">
     <div class="section-label">05 — Pricing</div>
-    <h2 class="section-title">Services &<br>Subscriptions</h2>
-    <div class="services-grid">
+    <h2 class="section-title">Choose Your<br>Service Plan</h2>
+    <div class="svc-selector-label">Select a service to see pricing &amp; details</div>
+    <div class="svc-btns">
+      <button class="svc-btn active" onclick="showSvc(this,'svc-web')">Web Maintenance<span class="stag">$199/mo</span></button>
+      <button class="svc-btn" onclick="showSvc(this,'svc-cloud')">Cloud Infrastructure<span class="stag">$299/mo</span></button>
+      <button class="svc-btn" onclick="showSvc(this,'svc-ai')">AI Web Development<span class="stag">$799/mo</span></button>
+      <button class="svc-btn" onclick="showSvc(this,'svc-ent')">Full DevOps Partner<span class="stag">$1,999/mo</span></button>
+    </div>
 
-      <!-- Starter -->
-      <div class="service-card">
-        <div class="service-badge">Starter</div>
-        <div class="service-price">$299</div>
-        <div class="service-price-sub">/ month</div>
-        <div class="service-title">Cloud Essentials</div>
-        <p class="service-desc">Ideal for small businesses needing reliable cloud and server support.</p>
-        <ul class="service-features">
-          <li class="service-feature">AWS / Azure environment monitoring</li>
-          <li class="service-feature">Monthly security patching</li>
-          <li class="service-feature">Backup verification & reports</li>
-          <li class="service-feature">Email support (48hr response)</li>
-        </ul>
-        <button class="stripe-btn stripe-btn-light" onclick="openModal('Cloud Essentials', '$299/mo', 'starter')">
-          Subscribe Now
-        </button>
-        <div class="stripe-secure">🔒 Secured by Stripe</div>
+    <div class="svc-panel active" id="svc-web">
+      <div class="svc-grid">
+        <div class="svc-left">
+          <div class="svc-badge">Most Popular for Web Clients</div>
+          <div class="svc-price">$199</div><div class="svc-cycle">/ month — Care Plan</div>
+          <div class="svc-name">WEB MAINTENANCE</div>
+          <div class="svc-desc">Monthly website upkeep for businesses and organizations that need a reliable tech partner.</div>
+          <ul class="svc-feats">
+            <li class="svc-feat">Up to 6 content updates per month</li>
+            <li class="svc-feat">Priority bug fixes (24hr response)</li>
+            <li class="svc-feat">Performance monitoring &amp; reports</li>
+            <li class="svc-feat">Minor feature additions</li>
+            <li class="svc-feat">Email + WhatsApp support</li>
+          </ul>
+          <a href="subscribe.html" class="svc-cta">Subscribe — $199/mo →</a>
+          <div class="svc-secure">🔒 Secured by Stripe · Cancel anytime</div>
+        </div>
+        <div class="svc-right">
+          <div class="svc-rtitle">How It Works</div>
+          <ul class="svc-steps">
+            <li class="svc-step"><div class="svc-step-num">01</div><div><div class="svc-step-label">Subscribe Securely</div><div class="svc-step-desc">Pay via Stripe. Confirmation arrives instantly in your inbox.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">02</div><div><div class="svc-step-label">Submit Your Requests</div><div class="svc-step-desc">Email or WhatsApp me your updates — text changes, images, event listings.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">03</div><div><div class="svc-step-label">Review &amp; Approve</div><div class="svc-step-desc">Changes shown before going live. You always have final say.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">04</div><div><div class="svc-step-label">Monthly Billing</div><div class="svc-step-desc">Stripe charges automatically. No invoices to chase, cancel anytime.</div></div></li>
+          </ul>
+        </div>
       </div>
+    </div>
 
-      <!-- Pro -->
-      <div class="service-card featured">
-        <div class="service-badge">Most Popular</div>
-        <div class="service-price">$799</div>
-        <div class="service-price-sub">/ month</div>
-        <div class="service-title">Infrastructure Pro</div>
-        <p class="service-desc">Full-service cloud infrastructure management for growing teams.</p>
-        <ul class="service-features">
-          <li class="service-feature">Everything in Starter</li>
-          <li class="service-feature">Terraform / Ansible automation</li>
-          <li class="service-feature">Identity & access management</li>
-          <li class="service-feature">Incident response & RCA docs</li>
-          <li class="service-feature">Priority support (4hr response)</li>
-        </ul>
-        <button class="stripe-btn stripe-btn-dark" onclick="openModal('Infrastructure Pro', '$799/mo', 'pro')">
-          Subscribe Now
-        </button>
-        <div class="stripe-secure">🔒 Secured by Stripe</div>
+    <div class="svc-panel" id="svc-cloud">
+      <div class="svc-grid">
+        <div class="svc-left">
+          <div class="svc-badge">For Growing Businesses</div>
+          <div class="svc-price">$299</div><div class="svc-cycle">/ month — Cloud Essentials</div>
+          <div class="svc-name">CLOUD INFRASTRUCTURE</div>
+          <div class="svc-desc">AWS &amp; Azure environment management for businesses that rely on cloud infrastructure.</div>
+          <ul class="svc-feats">
+            <li class="svc-feat">AWS / Azure environment monitoring</li>
+            <li class="svc-feat">Monthly security patching</li>
+            <li class="svc-feat">Backup verification &amp; reports</li>
+            <li class="svc-feat">IAM / access control reviews</li>
+            <li class="svc-feat">Email support (48hr response)</li>
+          </ul>
+          <a href="mailto:info@xentaa.com?subject=Cloud%20Infrastructure%20Plan%20Inquiry&body=Hi%20Faisal%2C%0A%0AI%27m%20interested%20in%20the%20Cloud%20Infrastructure%20plan%20at%20%24299%2Fmo.%0A%0ACompany%3A%0AEnvironment%20size%3A%0ACloud%20platform(s)%3A%0A" class="svc-cta">Get Started — Email Me →</a>
+          <div class="svc-secure">Custom quotes available for larger environments</div>
+        </div>
+        <div class="svc-right">
+          <div class="svc-rtitle">What's Covered</div>
+          <ul class="svc-steps">
+            <li class="svc-step"><div class="svc-step-num">☁️</div><div><div class="svc-step-label">AWS &amp; Azure Coverage</div><div class="svc-step-desc">EC2, S3, RDS, VPC on AWS · VMs, Storage, Networking on Azure.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">🔐</div><div><div class="svc-step-label">Security &amp; Patching</div><div class="svc-step-desc">Monthly patch cycles, vulnerability scans, IAM access reviews.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">💾</div><div><div class="svc-step-label">Backup &amp; Recovery</div><div class="svc-step-desc">Automated backups verified monthly with restore testing.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">📊</div><div><div class="svc-step-label">Monthly Reports</div><div class="svc-step-desc">Uptime, cost and security posture summary delivered to your inbox.</div></div></li>
+          </ul>
+        </div>
       </div>
+    </div>
 
-      <!-- Enterprise -->
-      <div class="service-card">
-        <div class="service-badge">Enterprise</div>
-        <div class="service-price">$1,999</div>
-        <div class="service-price-sub">/ month</div>
-        <div class="service-title">Full-Stack DevOps</div>
-        <p class="service-desc">End-to-end infrastructure + AI web development for ambitious organizations.</p>
-        <ul class="service-features">
-          <li class="service-feature">Everything in Pro</li>
-          <li class="service-feature">Custom AI website development</li>
-          <li class="service-feature">VMware & on-prem management</li>
-          <li class="service-feature">DR planning & testing</li>
-          <li class="service-feature">Dedicated Slack channel</li>
-          <li class="service-feature">24/7 on-call support</li>
-        </ul>
-        <button class="stripe-btn stripe-btn-light" onclick="openModal('Full-Stack DevOps', '$1,999/mo', 'enterprise')">
-          Subscribe Now
-        </button>
-        <div class="stripe-secure">🔒 Secured by Stripe</div>
+    <div class="svc-panel" id="svc-ai">
+      <div class="svc-grid">
+        <div class="svc-left">
+          <div class="svc-badge">AI-Powered</div>
+          <div class="svc-price">$799</div><div class="svc-cycle">/ month — Infrastructure Pro</div>
+          <div class="svc-name">AI WEB DEVELOPMENT</div>
+          <div class="svc-desc">Full-service cloud infrastructure plus custom AI website builds for ambitious organizations.</div>
+          <ul class="svc-feats">
+            <li class="svc-feat">Everything in Cloud Essentials</li>
+            <li class="svc-feat">Custom AI website development</li>
+            <li class="svc-feat">Terraform / Ansible automation</li>
+            <li class="svc-feat">Identity &amp; access management</li>
+            <li class="svc-feat">Priority support (4hr response)</li>
+          </ul>
+          <a href="mailto:info@xentaa.com?subject=AI%20Web%20Development%20Plan%20Inquiry&body=Hi%20Faisal%2C%0A%0AI%27m%20interested%20in%20the%20AI%20Web%20Development%20plan%20at%20%24799%2Fmo.%0A%0ACompany%3A%0AProject%20description%3A%0ACurrent%20tech%20stack%3A%0A" class="svc-cta">Get Started — Email Me →</a>
+          <div class="svc-secure">Let's scope your project first</div>
+        </div>
+        <div class="svc-right">
+          <div class="svc-rtitle">Recent AI Work</div>
+          <ul class="svc-steps">
+            <li class="svc-step"><div class="svc-step-num">🕌</div><div><div class="svc-step-label">Al-Madina Richmond</div><div class="svc-step-desc">AI-powered community platform serving thousands on cloud infrastructure.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">🤖</div><div><div class="svc-step-label">AI Chatbots &amp; Assistants</div><div class="svc-step-desc">Custom AI interfaces integrated with existing websites and workflows.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">⚙️</div><div><div class="svc-step-label">IaC Automation</div><div class="svc-step-desc">Terraform + Ansible deployments eliminating manual provisioning entirely.</div></div></li>
+          </ul>
+        </div>
       </div>
+    </div>
 
+    <div class="svc-panel" id="svc-ent">
+      <div class="svc-grid">
+        <div class="svc-left">
+          <div class="svc-badge">All-Inclusive</div>
+          <div class="svc-price">$1,999</div><div class="svc-cycle">/ month — Full DevOps Partner</div>
+          <div class="svc-name">ENTERPRISE PARTNER</div>
+          <div class="svc-desc">End-to-end infrastructure, AI development, and 24/7 support for organizations that need a dedicated tech partner.</div>
+          <ul class="svc-feats">
+            <li class="svc-feat">Everything in AI Web Development</li>
+            <li class="svc-feat">VMware &amp; on-prem management</li>
+            <li class="svc-feat">DR planning &amp; recovery testing</li>
+            <li class="svc-feat">Dedicated Slack channel</li>
+            <li class="svc-feat">24/7 on-call support</li>
+            <li class="svc-feat">Bi-weekly strategy calls</li>
+          </ul>
+          <a href="mailto:info@xentaa.com?subject=Enterprise%20Partner%20Plan%20Inquiry&body=Hi%20Faisal%2C%0A%0AI%27m%20interested%20in%20the%20Enterprise%20Partner%20plan%20at%20%241%2C999%2Fmo.%0A%0AOrganization%3A%0AEnvironment%20overview%3A%0AStart%20date%3A%0A" class="svc-cta">Contact Me to Start →</a>
+          <div class="svc-secure">Custom contracts available</div>
+        </div>
+        <div class="svc-right">
+          <div class="svc-rtitle">Full Coverage</div>
+          <ul class="svc-steps">
+            <li class="svc-step"><div class="svc-step-num">🌐</div><div><div class="svc-step-label">Hybrid Cloud + On-Prem</div><div class="svc-step-desc">AWS, Azure, VMware, and bare-metal — all managed under one retainer.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">🚨</div><div><div class="svc-step-label">24/7 Incident Response</div><div class="svc-step-desc">On-call support with documented RCAs and remediation plans.</div></div></li>
+            <li class="svc-step"><div class="svc-step-num">🗺️</div><div><div class="svc-step-label">Strategic Roadmapping</div><div class="svc-step-desc">Bi-weekly calls to plan and prioritize your infrastructure evolution.</div></div></li>
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- CONTACT -->
   <section id="contact" style="background:var(--off-black);">
     <div class="contact-inner">
       <div class="section-label">06 — Contact</div>
       <h2 class="section-title" style="text-align:center;">Let's Build<br>Something.</h2>
-      <a href="mailto:info@xentaa.com" class="contact-email">info@xentaa.com</a>
+      <a href="mailto:info@xentaa.com?subject=Project%20Inquiry&body=Hi%20Faisal%2C%0A%0AI%27d%20like%20to%20discuss%20a%20project%20with%20you.%0A%0AName%3A%0ACompany%3A%0ADetails%3A%0A" class="contact-email">info@xentaa.com</a>
       <div class="contact-links">
-        <a href="https://linkedin.com/in/faisalssempagama" target="_blank" class="contact-link">LinkedIn</a>
-        <a href="https://almadinarichmond.org" target="_blank" class="contact-link">Al-Madina Project</a>
-        <a href="mailto:info@xentaa.com" class="contact-link">Email</a>
+        <a href="https://linkedin.com/in/faisalssempagama" target="_blank" rel="noopener" class="contact-link">LinkedIn</a>
+        <a href="https://almadinarichmond.org" target="_blank" rel="noopener" class="contact-link">Al-Madina Project</a>
+        <a href="subscribe.html" class="contact-link">Subscribe to a Plan</a>
+        <a href="Faisal-Ssempagama-Resume.pdf" download class="contact-link">Download Resume</a>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
   <footer>
-    <div class="footer-copy">© 2025 Faisal Ssempagama — All rights reserved</div>
+    <div class="footer-copy">© 2025 Faisal Ssempagama · Xentaa Web Services · Richmond, VA</div>
     <div class="footer-badge">Available for new projects</div>
   </footer>
 
-  <!-- STRIPE MODAL -->
-  <div class="modal-overlay" id="modal">
-    <div class="modal-box">
-      <button class="modal-close" onclick="closeModal()">✕</button>
-      <div class="modal-title" id="modal-title">Subscribe</div>
-      <div class="modal-plan" id="modal-plan"></div>
-      <input type="text" class="modal-input" placeholder="Full Name" id="modal-name" />
-      <input type="email" class="modal-input" placeholder="Email Address" id="modal-email" />
-      <div id="stripe-card-element"></div>
-      <button class="modal-submit" id="modal-submit" onclick="handleStripePayment()">
-        Confirm & Subscribe
-      </button>
-      <div class="modal-note">🔒 Payments encrypted by Stripe. Cancel anytime.</div>
-    </div>
-  </div>
-
   <script>
-    // ── Cursor ──────────────────────────────────────────────
-    const cursor = document.getElementById('cursor');
-    const ring = document.getElementById('cursorRing');
-    document.addEventListener('mousemove', e => {
-      cursor.style.left = e.clientX + 'px';
-      cursor.style.top = e.clientY + 'px';
-      setTimeout(() => {
-        ring.style.left = e.clientX + 'px';
-        ring.style.top = e.clientY + 'px';
-      }, 80);
-    });
-    document.querySelectorAll('a, button').forEach(el => {
-      el.addEventListener('mouseenter', () => ring.style.transform = 'translate(-50%,-50%) scale(1.6)');
-      el.addEventListener('mouseleave', () => ring.style.transform = 'translate(-50%,-50%) scale(1)');
-    });
-
-    // ── Scroll reveal ───────────────────────────────────────
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.timeline-item').forEach(el => observer.observe(el));
-
-    // ── Stripe ──────────────────────────────────────────────
-    // !! IMPORTANT: Replace the key below with your real Stripe publishable key
-    // Get yours at: https://dashboard.stripe.com/apikeys
-    const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_KEY';
-
-    // !! IMPORTANT: Replace these with your real Stripe Price IDs
-    // Create prices at: https://dashboard.stripe.com/products
-    const STRIPE_PRICE_IDS = {
-      starter:    'price_REPLACE_STARTER_PRICE_ID',
-      pro:        'price_REPLACE_PRO_PRICE_ID',
-      enterprise: 'price_REPLACE_ENTERPRISE_PRICE_ID',
-    };
-
-    let stripe, elements, cardElement, currentPlan;
-
-    function initStripe() {
-      if (!stripe && STRIPE_PUBLISHABLE_KEY !== 'pk_test_REPLACE_WITH_YOUR_STRIPE_KEY') {
-        stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
-        elements = stripe.elements({ appearance: { theme: 'night' } });
-        cardElement = elements.create('card', {
-          style: {
-            base: { color: '#f5f0e8', fontFamily: 'DM Mono, monospace', fontSize: '14px', '::placeholder': { color: '#7a7060' } }
-          }
-        });
-        cardElement.mount('#stripe-card-element');
-        cardElement.on('focus', () => document.getElementById('stripe-card-element').classList.add('focused'));
-        cardElement.on('blur', () => document.getElementById('stripe-card-element').classList.remove('focused'));
-      }
+    // Hamburger menu
+    function toggleNav(){
+      document.getElementById('navLinks').classList.toggle('open');
+      document.getElementById('hamburger').classList.toggle('open');
+    }
+    function closeNav(){
+      document.getElementById('navLinks').classList.remove('open');
+      document.getElementById('hamburger').classList.remove('open');
     }
 
-    function openModal(title, price, plan) {
-      currentPlan = plan;
-      document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-plan').textContent = price + ' · Recurring Subscription';
-      document.getElementById('modal').classList.add('open');
-      setTimeout(initStripe, 100);
-    }
-
-    function closeModal() {
-      document.getElementById('modal').classList.remove('open');
-    }
-
-    document.getElementById('modal').addEventListener('click', e => {
-      if (e.target === document.getElementById('modal')) closeModal();
+    // Cursor
+    var cur=document.getElementById('cursor'), ring=document.getElementById('ring');
+    var mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',function(e){ mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
+    (function loop(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(loop); })();
+    document.querySelectorAll('a,button,.svc-btn,.arch-tab').forEach(function(el){
+      el.addEventListener('mouseenter',function(){ cur.classList.add('hov'); ring.classList.add('hov'); });
+      el.addEventListener('mouseleave',function(){ cur.classList.remove('hov'); ring.classList.remove('hov'); });
     });
 
-    async function handleStripePayment() {
-      const name = document.getElementById('modal-name').value.trim();
-      const email = document.getElementById('modal-email').value.trim();
-      const btn = document.getElementById('modal-submit');
+    // Scroll reveal for skill blocks
+    var obs=new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; } }); },{threshold:.1});
+    document.querySelectorAll('.skill-block,.project-card,.stat-card').forEach(function(el){
+      el.style.opacity='0'; el.style.transform='translateY(16px)';
+      el.style.transition='opacity .5s ease, transform .5s ease';
+      obs.observe(el);
+    });
 
-      if (!name || !email) { alert('Please enter your name and email.'); return; }
-      if (!stripe) {
-        // Demo mode — Stripe key not yet configured
-        alert('✅ Demo mode: Stripe is not configured yet.\n\nTo enable real payments:\n1. Add your Stripe publishable key\n2. Add your Price IDs\n3. Set up a backend endpoint for subscription creation\n\nSee comments in the HTML source.');
-        return;
-      }
+    // Service tabs
+    function showSvc(btn,id){
+      document.querySelectorAll('.svc-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.querySelectorAll('.svc-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
 
-      btn.textContent = 'Processing...';
-      btn.disabled = true;
-
-      // In production, you need a backend endpoint that:
-      // 1. Creates a Stripe Customer
-      // 2. Creates a Subscription with the Price ID
-      // 3. Returns a client_secret for payment confirmation
-      // Example backend: Node.js / Python / PHP with Stripe SDK
-      // Docs: https://stripe.com/docs/billing/subscriptions/build-subscriptions
-
-      const priceId = STRIPE_PRICE_IDS[currentPlan];
-
-      // Placeholder — replace with your actual backend call
-      const response = await fetch('/api/create-subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, priceId })
-      }).catch(() => null);
-
-      if (!response || !response.ok) {
-        alert('Backend not connected yet. See code comments to set up your subscription endpoint.');
-        btn.textContent = 'Confirm & Subscribe';
-        btn.disabled = false;
-        return;
-      }
-
-      const { clientSecret } = await response.json();
-      const { error } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: { card: cardElement, billing_details: { name, email } }
-      }
+    // Arch tabs — handles both arch-panel and certs-panel
+    function showArch(btn,id){
+      document.querySelectorAll('.arch-panel,.certs-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.querySelectorAll('.arch-tab').forEach(function(t){ t.classList.remove('active'); });
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>
