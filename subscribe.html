@@ -3,841 +3,491 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Web Maintenance Plans — Faisal Ssempagama</title>
+  <title>Subscribe — Xentaa Web Services</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
   <script src="https://js.stripe.com/v3/"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root {
-      --cream: #f7f3ec;
-      --paper: #ede8df;
-      --ink: #1a1714;
-      --ink-mid: #3d3730;
-      --ink-light: #8a7f72;
-      --teal: #1a6b5e;
-      --teal-light: #22876f;
-      --teal-pale: rgba(26,107,94,0.08);
-      --teal-border: rgba(26,107,94,0.2);
-      --amber: #c47b1a;
-      --white: #ffffff;
-      --serif: 'Instrument Serif', serif;
-      --mono: 'Geist Mono', monospace;
-      --display: 'Syne', sans-serif;
+      --black:#080808; --off-black:#0d0d0d; --card-bg:#111111;
+      --gold:#c9a84c; --gold-light:#e8c96a; --gold-dim:rgba(201,168,76,0.12);
+      --white:#f5f0e8; --muted:#7a7060; --border:rgba(201,168,76,0.18);
+      --font-display:'Bebas Neue',sans-serif;
+      --font-serif:'Cormorant Garamond',serif;
+      --font-mono:'DM Mono',monospace;
     }
+    html { scroll-behavior:smooth; }
+    body { background:var(--black); color:var(--white); font-family:var(--font-serif); font-size:18px; line-height:1.7; overflow-x:hidden; cursor:none; min-height:100vh; }
 
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--cream);
-      color: var(--ink);
-      font-family: var(--serif);
-      font-size: 17px;
-      line-height: 1.7;
-    }
+    /* CURSOR */
+    .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); box-shadow:0 0 16px rgba(201,168,76,0.9); }
+    .cursor-ring { position:fixed; width:38px; height:38px; border:1.5px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:.65; }
+    .cursor.hov { width:6px; height:6px; background:#fff; }
+    .cursor-ring.hov { width:54px; height:54px; opacity:.3; }
 
-    /* ── HEADER ── */
-    header {
-      background: var(--ink);
-      padding: 18px 60px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .header-logo {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 1rem;
-      color: var(--cream);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      text-decoration: none;
-    }
-    .header-logo span { color: #4ecba5; }
-    .header-back {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--ink-light);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: color 0.2s;
-    }
-    .header-back:hover { color: var(--cream); }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; z-index:1000; }
 
-    /* ── HERO ── */
-    .hero {
-      background: var(--ink);
-      padding: 80px 60px 100px;
-      position: relative;
-      overflow: hidden;
-      text-align: center;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 60% 80% at 50% 120%, rgba(26,107,94,0.25) 0%, transparent 70%);
-    }
-    .hero-eyebrow {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: #4ecba5;
-      margin-bottom: 20px;
-      position: relative;
-    }
-    .hero h1 {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: clamp(2.8rem, 6vw, 5rem);
-      color: var(--cream);
-      line-height: 1.05;
-      position: relative;
-      margin-bottom: 24px;
-    }
-    .hero h1 em {
-      font-family: var(--serif);
-      font-style: italic;
-      font-weight: 400;
-      color: #4ecba5;
-    }
-    .hero-sub {
-      font-family: var(--serif);
-      font-size: 1.15rem;
-      color: rgba(247,243,236,0.6);
-      max-width: 520px;
-      margin: 0 auto;
-      position: relative;
-    }
+    /* NAV */
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; justify-content:space-between; align-items:center; padding:22px 60px; background:rgba(8,8,8,.97); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+    .nav-logo { font-family:var(--font-display); font-size:1.4rem; letter-spacing:4px; color:var(--gold); text-decoration:none; }
+    .nav-back { font-family:var(--font-mono); font-size:.65rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .25s; cursor:none; display:flex; align-items:center; gap:8px; }
+    .nav-back:hover { color:var(--gold); }
 
-    /* ── WHAT'S INCLUDED STRIP ── */
-    .includes-strip {
-      background: var(--teal);
-      padding: 20px 60px;
-      display: flex;
-      justify-content: center;
-      gap: 60px;
-      flex-wrap: wrap;
-    }
-    .include-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(247,243,236,0.85);
-    }
-    .include-item::before {
-      content: '✓';
-      font-size: 0.8rem;
-      color: #a8ecd8;
-    }
+    /* HERO STRIP */
+    .page-hero { padding:140px 60px 60px; background:var(--off-black); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+    .page-hero::before { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(201,168,76,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.03) 1px,transparent 1px); background-size:60px 60px; }
+    .page-hero-orb { position:absolute; width:600px; height:600px; background:radial-gradient(circle,rgba(201,168,76,.06) 0%,transparent 65%); top:-200px; right:-100px; border-radius:50%; }
+    .page-tag { font-family:var(--font-mono); font-size:.65rem; letter-spacing:5px; text-transform:uppercase; color:var(--gold); margin-bottom:16px; position:relative; }
+    .page-title { font-family:var(--font-display); font-size:clamp(3rem,8vw,6rem); letter-spacing:6px; line-height:.95; position:relative; }
+    .page-title span { color:var(--gold); }
+    .page-sub { font-family:var(--font-serif); font-style:italic; font-size:1.15rem; color:rgba(245,240,232,.5); margin-top:18px; max-width:500px; position:relative; }
 
-    /* ── MAIN CONTENT ── */
-    .main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 80px 40px;
-    }
+    /* MAIN LAYOUT */
+    .main { max-width:1300px; margin:0 auto; padding:70px 60px; display:grid; grid-template-columns:1fr 380px; gap:60px; align-items:start; }
 
-    /* ── PLAN CARDS ── */
-    .plans {
-      display: grid;
-      grid-template-columns: 1fr 1.15fr 1fr;
-      gap: 2px;
-      margin-bottom: 80px;
-      background: var(--paper);
-      border: 1px solid rgba(26,23,20,0.1);
-    }
-    .plan-card {
-      background: var(--white);
-      padding: 50px 40px 40px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      transition: transform 0.2s;
-    }
-    .plan-card.featured {
-      background: var(--ink);
-      color: var(--cream);
-      transform: scaleY(1.02);
-      z-index: 2;
-      box-shadow: 0 20px 60px rgba(26,23,20,0.25);
-    }
-    .plan-badge {
-      font-family: var(--mono);
-      font-size: 0.58rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 5px 14px;
-      border-radius: 2px;
-      display: inline-block;
-      margin-bottom: 28px;
-      width: fit-content;
-    }
-    .plan-badge.standard { background: var(--teal-pale); color: var(--teal); }
-    .plan-badge.popular { background: #4ecba5; color: var(--ink); }
-    .plan-badge.premium { background: rgba(196,123,26,0.1); color: var(--amber); }
+    /* PLAN SELECTOR */
+    .plans-section {}
+    .section-label { font-family:var(--font-mono); font-size:.65rem; letter-spacing:5px; text-transform:uppercase; color:var(--gold); margin-bottom:20px; display:flex; align-items:center; gap:16px; }
+    .section-label::after { content:''; flex:1; max-width:60px; height:1px; background:var(--border); }
 
-    .plan-name {
-      font-family: var(--display);
-      font-weight: 700;
-      font-size: 1rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      color: var(--ink);
-    }
-    .plan-card.featured .plan-name { color: #4ecba5; }
+    .plan-tabs { display:flex; gap:2px; margin-bottom:2px; flex-wrap:wrap; }
+    .plan-tab { font-family:var(--font-mono); font-size:.62rem; letter-spacing:2px; text-transform:uppercase; padding:12px 24px; background:var(--card-bg); color:var(--muted); border:none; cursor:none; transition:all .25s; border-bottom:2px solid transparent; }
+    .plan-tab.active { color:var(--gold); border-bottom-color:var(--gold); background:#151515; }
+    .plan-tab:hover { color:var(--white); background:#151515; }
 
-    .plan-price {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 3.8rem;
-      line-height: 1;
-      margin-bottom: 4px;
-      color: var(--ink);
-    }
-    .plan-card.featured .plan-price { color: var(--cream); }
+    .plan-panel { display:none; background:var(--card-bg); padding:40px; border:1px solid var(--border); animation:fadeIn .3s ease; }
+    .plan-panel.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-    .plan-cycle {
-      font-family: var(--mono);
-      font-size: 0.62rem;
-      letter-spacing: 2px;
-      color: var(--ink-light);
-      text-transform: uppercase;
-      margin-bottom: 28px;
-    }
-    .plan-card.featured .plan-cycle { color: rgba(247,243,236,0.45); }
+    .plan-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; }
+    .plan-badge { display:inline-block; font-family:var(--font-mono); font-size:.55rem; letter-spacing:3px; text-transform:uppercase; padding:4px 12px; background:var(--gold-dim); color:var(--gold); margin-bottom:10px; }
+    .plan-price { font-family:var(--font-display); font-size:3.5rem; letter-spacing:2px; color:var(--white); line-height:1; }
+    .plan-cycle { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); letter-spacing:2px; margin-top:4px; }
+    .plan-name { font-family:var(--font-display); font-size:1.8rem; letter-spacing:3px; color:var(--gold); margin-bottom:6px; }
+    .plan-desc { font-family:var(--font-serif); font-style:italic; font-size:.95rem; color:rgba(245,240,232,.5); margin-bottom:24px; }
+    .plan-feats { list-style:none; }
+    .plan-feat { font-family:var(--font-mono); font-size:.64rem; color:rgba(245,240,232,.65); padding:10px 0; border-bottom:1px solid rgba(201,168,76,.07); display:flex; align-items:center; gap:12px; }
+    .plan-feat::before { content:'✓'; color:var(--gold); flex-shrink:0; }
+    .plan-select-btn { margin-top:28px; width:100%; padding:15px; background:var(--gold); color:var(--black); font-family:var(--font-mono); font-size:.7rem; letter-spacing:3px; text-transform:uppercase; border:none; cursor:none; font-weight:500; transition:background .25s; }
+    .plan-select-btn:hover { background:var(--gold-light); }
+    .plan-select-btn.selected { background:#2a2a1a; color:var(--gold); border:1px solid var(--gold); }
 
-    .plan-tagline {
-      font-family: var(--serif);
-      font-style: italic;
-      font-size: 1rem;
-      color: var(--ink-mid);
-      margin-bottom: 28px;
-      padding-bottom: 28px;
-      border-bottom: 1px solid rgba(26,23,20,0.08);
-    }
-    .plan-card.featured .plan-tagline {
-      color: rgba(247,243,236,0.65);
-      border-bottom-color: rgba(247,243,236,0.08);
-    }
+    /* STICKY CHECKOUT */
+    .checkout-col { position:sticky; top:100px; }
+    .checkout-box { background:var(--card-bg); border:1px solid var(--border); padding:40px; }
+    .checkout-title { font-family:var(--font-display); font-size:1.6rem; letter-spacing:3px; color:var(--white); margin-bottom:6px; }
+    .checkout-sub { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); letter-spacing:2px; margin-bottom:28px; }
 
-    .plan-features {
-      list-style: none;
-      flex: 1;
-      margin-bottom: 36px;
-    }
-    .plan-feature {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--ink-mid);
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(26,23,20,0.06);
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      line-height: 1.5;
-    }
-    .plan-card.featured .plan-feature {
-      color: rgba(247,243,236,0.75);
-      border-bottom-color: rgba(247,243,236,0.06);
-    }
-    .plan-feature .check { color: var(--teal); flex-shrink: 0; }
-    .plan-card.featured .plan-feature .check { color: #4ecba5; }
-    .plan-feature .dim { color: var(--ink-light); opacity: 0.6; }
+    /* selected plan summary */
+    .selected-plan-row { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); margin-bottom:24px; }
+    .selected-plan-name { font-family:var(--font-mono); font-size:.65rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); }
+    .selected-plan-price { font-family:var(--font-display); font-size:1.5rem; letter-spacing:2px; color:var(--white); }
+    .no-plan-msg { font-family:var(--font-mono); font-size:.62rem; color:var(--muted); letter-spacing:2px; text-transform:uppercase; padding:20px 0; text-align:center; border:1px dashed rgba(201,168,76,.15); margin-bottom:24px; }
 
-    .plan-cta {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 16px 24px;
-      border: none;
-      width: 100%;
-      cursor: pointer;
-      transition: all 0.25s;
-      font-weight: 500;
-    }
-    .plan-cta.outline {
-      background: transparent;
-      color: var(--teal);
-      border: 1.5px solid var(--teal-border);
-    }
-    .plan-cta.outline:hover { background: var(--teal-pale); border-color: var(--teal); }
-    .plan-cta.solid {
-      background: #4ecba5;
-      color: var(--ink);
-    }
-    .plan-cta.solid:hover { background: #6ed8b8; }
-    .plan-cta.amber {
-      background: transparent;
-      color: var(--amber);
-      border: 1.5px solid rgba(196,123,26,0.25);
-    }
-    .plan-cta.amber:hover { background: rgba(196,123,26,0.06); border-color: var(--amber); }
+    /* form */
+    .form-group { margin-bottom:14px; }
+    .form-label { font-family:var(--font-mono); font-size:.58rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:7px; }
+    .form-input { width:100%; background:var(--off-black); border:1px solid var(--border); color:var(--white); font-family:var(--font-mono); font-size:.78rem; padding:13px 16px; outline:none; transition:border-color .3s; letter-spacing:1px; }
+    .form-input:focus { border-color:var(--gold); }
+    .form-input::placeholder { color:var(--muted); }
+    #card-element { background:var(--off-black); border:1px solid var(--border); padding:14px 16px; margin-bottom:14px; transition:border-color .3s; }
+    #card-element.focused { border-color:var(--gold); }
+    .card-label { font-family:var(--font-mono); font-size:.58rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:7px; margin-top:4px; }
+    .submit-btn { width:100%; padding:17px; background:var(--gold); color:var(--black); font-family:var(--font-mono); font-size:.72rem; letter-spacing:3px; text-transform:uppercase; border:none; cursor:none; font-weight:500; transition:background .25s; margin-top:4px; }
+    .submit-btn:hover:not(:disabled) { background:var(--gold-light); }
+    .submit-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .secure-note { font-family:var(--font-mono); font-size:.58rem; color:var(--muted); text-align:center; margin-top:12px; letter-spacing:1px; }
+    .error-msg { font-family:var(--font-mono); font-size:.62rem; color:#e74c3c; margin-top:10px; text-align:center; display:none; }
 
-    .plan-secure {
-      text-align: center;
-      font-family: var(--mono);
-      font-size: 0.58rem;
-      color: var(--ink-light);
-      margin-top: 10px;
-      letter-spacing: 1px;
-    }
-    .plan-card.featured .plan-secure { color: rgba(247,243,236,0.3); }
+    /* success */
+    .success-box { display:none; text-align:center; padding:20px 0; }
+    .success-icon { font-size:3rem; margin-bottom:16px; }
+    .success-title { font-family:var(--font-display); font-size:2rem; letter-spacing:4px; color:var(--gold); margin-bottom:10px; }
+    .success-msg { font-family:var(--font-mono); font-size:.65rem; color:var(--muted); letter-spacing:1px; line-height:1.8; }
 
-    /* ── HOW IT WORKS ── */
-    .how-section {
-      margin-bottom: 80px;
-    }
-    .section-heading {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 1.8rem;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-    .section-sub {
-      font-family: var(--serif);
-      font-style: italic;
-      color: var(--ink-light);
-      margin-bottom: 48px;
-    }
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2px;
-      background: var(--paper);
-      border: 1px solid rgba(26,23,20,0.1);
-    }
-    .step {
-      background: var(--white);
-      padding: 36px 28px;
-    }
-    .step-num {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 3rem;
-      color: rgba(26,107,94,0.1);
-      line-height: 1;
-      margin-bottom: 16px;
-    }
-    .step-title {
-      font-family: var(--display);
-      font-weight: 700;
-      font-size: 0.85rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--ink);
-      margin-bottom: 10px;
-    }
-    .step-desc {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--ink-light);
-      line-height: 1.7;
-    }
+    /* trust row */
+    .trust-row { display:flex; gap:2px; margin-top:2px; }
+    .trust-item { flex:1; background:var(--off-black); padding:16px; text-align:center; border:1px solid var(--border); }
+    .trust-icon { font-size:1.2rem; margin-bottom:6px; }
+    .trust-text { font-family:var(--font-mono); font-size:.56rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); line-height:1.5; }
 
-    /* ── FAQ ── */
-    .faq-section { margin-bottom: 80px; }
-    .faq-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px;
-      background: var(--paper);
-      border: 1px solid rgba(26,23,20,0.1);
-    }
-    .faq-item {
-      background: var(--white);
-      padding: 32px 36px;
-    }
-    .faq-q {
-      font-family: var(--display);
-      font-weight: 700;
-      font-size: 0.9rem;
-      letter-spacing: 1px;
-      color: var(--ink);
-      margin-bottom: 10px;
-    }
-    .faq-a {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--ink-light);
-      line-height: 1.8;
-    }
+    /* contact alt */
+    .alt-contact { margin-top:60px; padding:40px; background:var(--off-black); border:1px solid var(--border); text-align:center; }
+    .alt-contact-title { font-family:var(--font-display); font-size:1.8rem; letter-spacing:4px; color:var(--white); margin-bottom:10px; }
+    .alt-contact-sub { font-family:var(--font-serif); font-style:italic; font-size:1rem; color:var(--muted); margin-bottom:24px; }
+    .alt-contact-link { font-family:var(--font-mono); font-size:.68rem; letter-spacing:3px; text-transform:uppercase; color:var(--gold); text-decoration:none; padding:14px 36px; border:1px solid var(--border); display:inline-block; transition:all .25s; cursor:none; }
+    .alt-contact-link:hover { background:var(--gold-dim); border-color:var(--gold); }
 
-    /* ── CONTACT STRIP ── */
-    .contact-strip {
-      background: var(--ink);
-      padding: 60px;
-      text-align: center;
-      border-radius: 4px;
-    }
-    .contact-strip p {
-      font-family: var(--serif);
-      font-style: italic;
-      color: rgba(247,243,236,0.55);
-      margin-bottom: 20px;
-    }
-    .contact-strip a {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #4ecba5;
-      text-decoration: none;
-      border-bottom: 1px solid rgba(78,203,165,0.3);
-      padding-bottom: 2px;
-      transition: border-color 0.2s;
-    }
-    .contact-strip a:hover { border-color: #4ecba5; }
+    /* footer */
+    .page-footer { padding:28px 60px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--off-black); }
+    .footer-copy { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); letter-spacing:2px; }
+    .footer-links { display:flex; gap:28px; }
+    .footer-links a { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); text-decoration:none; letter-spacing:2px; text-transform:uppercase; transition:color .25s; cursor:none; }
+    .footer-links a:hover { color:var(--gold); }
 
-    /* ── FOOTER ── */
-    footer {
-      text-align: center;
-      padding: 40px;
-      font-family: var(--mono);
-      font-size: 0.6rem;
-      letter-spacing: 2px;
-      color: var(--ink-light);
-      text-transform: uppercase;
+    /* ── TABLET ── */
+    @media(max-width:1000px){
+      .main { grid-template-columns:1fr; gap:40px; }
+      .checkout-col { position:static; }
     }
+    /* ── MOBILE ── */
+    @media(max-width:768px){
+      .cursor,.cursor-ring { display:none; }
+      body { cursor:auto; }
 
-    /* ── MODAL ── */
-    .overlay {
-      position: fixed; inset: 0;
-      background: rgba(26,23,20,0.75);
-      backdrop-filter: blur(8px);
-      z-index: 200;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.3s;
-    }
-    .overlay.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: var(--white);
-      width: 90%;
-      max-width: 460px;
-      padding: 56px 48px;
-      position: relative;
-      transform: translateY(24px);
-      transition: transform 0.3s;
-    }
-    .overlay.open .modal { transform: translateY(0); }
-    .modal-close {
-      position: absolute; top: 18px; right: 22px;
-      background: none; border: none;
-      font-size: 1.2rem; color: var(--ink-light); cursor: pointer;
-      transition: color 0.2s;
-    }
-    .modal-close:hover { color: var(--ink); }
-    .modal-plan-badge {
-      display: inline-block;
-      font-family: var(--mono);
-      font-size: 0.6rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      background: var(--teal-pale);
-      color: var(--teal);
-      margin-bottom: 16px;
-    }
-    .modal-title {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 1.8rem;
-      color: var(--ink);
-      margin-bottom: 4px;
-    }
-    .modal-price {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      letter-spacing: 2px;
-      color: var(--ink-light);
-      text-transform: uppercase;
-      margin-bottom: 32px;
-    }
-    .form-label {
-      font-family: var(--mono);
-      font-size: 0.6rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--ink-light);
-      display: block;
-      margin-bottom: 6px;
-    }
-    .form-input {
-      width: 100%;
-      background: var(--cream);
-      border: 1px solid rgba(26,23,20,0.12);
-      color: var(--ink);
-      font-family: var(--mono);
-      font-size: 0.8rem;
-      padding: 13px 16px;
-      margin-bottom: 16px;
-      outline: none;
-      transition: border-color 0.25s;
-    }
-    .form-input:focus { border-color: var(--teal); }
-    .form-input::placeholder { color: var(--ink-light); }
-    #card-element {
-      background: var(--cream);
-      border: 1px solid rgba(26,23,20,0.12);
-      padding: 13px 16px;
-      margin-bottom: 24px;
-      transition: border-color 0.25s;
-    }
-    #card-element.StripeElement--focus { border-color: var(--teal); }
-    .submit-btn {
-      width: 100%;
-      background: var(--teal);
-      color: var(--white);
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 16px;
-      border: none;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.25s;
-    }
-    .submit-btn:hover { background: var(--teal-light); }
-    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .modal-footer-note {
-      font-family: var(--mono);
-      font-size: 0.58rem;
-      color: var(--ink-light);
-      text-align: center;
-      margin-top: 14px;
-      letter-spacing: 1px;
-    }
+      /* NAV */
+      nav { padding:16px 20px; }
 
-    /* success state */
-    .success-state {
-      text-align: center;
-      padding: 20px 0;
-    }
-    .success-icon {
-      font-size: 3rem;
-      margin-bottom: 16px;
-    }
-    .success-title {
-      font-family: var(--display);
-      font-weight: 800;
-      font-size: 1.6rem;
-      color: var(--ink);
-      margin-bottom: 10px;
-    }
-    .success-msg {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--ink-light);
-      line-height: 1.8;
-    }
+      /* HERO */
+      .page-hero { padding:90px 20px 36px; }
+      .page-title { font-size:clamp(2.5rem,14vw,4.5rem); letter-spacing:3px; }
+      .page-sub { font-size:.95rem; }
 
-    @media (max-width: 800px) {
-      header, .hero, .includes-strip { padding-left: 24px; padding-right: 24px; }
-      .main { padding: 50px 24px; }
-      .plans { grid-template-columns: 1fr; }
-      .plan-card.featured { transform: none; }
-      .steps { grid-template-columns: 1fr 1fr; }
-      .faq-grid { grid-template-columns: 1fr; }
-      .modal { padding: 40px 28px; }
+      /* MAIN */
+      .main { padding:36px 20px; grid-template-columns:1fr; gap:32px; }
+      .checkout-col { position:static; }
+
+      /* PLAN TABS — scroll */
+      .plan-tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; padding-bottom:2px; }
+      .plan-tab { white-space:nowrap; flex-shrink:0; padding:10px 18px; }
+      .plan-panel { padding:24px 20px; }
+      .plan-header { flex-direction:column; gap:12px; align-items:flex-start; }
+      .plan-select-btn { padding:14px; font-size:.65rem; }
+
+      /* CHECKOUT */
+      .checkout-box { padding:28px 20px; }
+
+      /* TRUST ROW */
+      .trust-row { display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+
+      /* ALT CONTACT */
+      .alt-contact { padding:28px 20px; }
+      .alt-contact-link { width:100%; text-align:center; display:block; }
+
+      /* FOOTER */
+      .page-footer { padding:18px 20px; flex-direction:column; gap:12px; text-align:center; }
+      .footer-links { justify-content:center; }
+    }
+    @media(max-width:400px){
+      .page-title { font-size:2.2rem; }
+      .plan-price { font-size:2.8rem; }
     }
   </style>
 </head>
 <body>
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="ring"></div>
 
-  <!-- HEADER -->
-  <header>
-    <a href="index.html" class="header-logo">FS <span>·</span> Web Services</a>
-    <a href="/cdn-cgi/l/email-protection#5a33343c351a223f342e3b3b74393537" class="header-back">← Contact Me</a>
-  </header>
+  <nav>
+    <a href="index.html" class="nav-logo">FS</a>
+    <a href="index.html" class="nav-back">← Back to Portfolio</a>
+  </nav>
 
-  <!-- HERO -->
-  <div class="hero">
-    <div class="hero-eyebrow">Web Maintenance & Support Plans</div>
-    <h1>Your website,<br><em>always taken care of.</em></h1>
-    <p class="hero-sub">Monthly retainer plans for organizations that want a reliable tech partner — not a one-time freelancer.</p>
+  <div class="page-hero">
+    <div class="page-hero-orb"></div>
+    <div class="page-tag">Xentaa Web Services — Subscription Plans</div>
+    <h1 class="page-title">CHOOSE YOUR<br><span>PLAN</span></h1>
+    <p class="page-sub">Select a plan, complete checkout, and I'll be in touch within 24 hours to get started.</p>
   </div>
 
-  <!-- WHAT'S ALWAYS INCLUDED -->
-  <div class="includes-strip">
-    <div class="include-item">Monthly Website Updates</div>
-    <div class="include-item">Priority Bug Fixes</div>
-    <div class="include-item">Secure Payments via Stripe</div>
-    <div class="include-item">Cancel Anytime</div>
-  </div>
-
-  <!-- MAIN -->
   <div class="main">
+    <!-- LEFT — Plan selector -->
+    <div class="plans-section">
+      <div class="section-label">Available Plans</div>
 
-    <!-- PLANS -->
-    <div class="plans" id="plans">
+      <div class="plan-tabs">
+        <button class="plan-tab active" onclick="selectTab(this,'panel-web')">Web Maintenance</button>
+        <button class="plan-tab" onclick="selectTab(this,'panel-cloud')">Cloud Infrastructure</button>
+        <button class="plan-tab" onclick="selectTab(this,'panel-ai')">AI Web Dev</button>
+        <button class="plan-tab" onclick="selectTab(this,'panel-ent')">Enterprise</button>
+      </div>
 
-      <!-- Basic -->
-      <div class="plan-card">
-        <span class="plan-badge standard">Basic</span>
-        <div class="plan-name">Maintenance</div>
-        <div class="plan-price">$99</div>
-        <div class="plan-cycle">per month</div>
-        <div class="plan-tagline">For small sites that need occasional upkeep.</div>
-        <ul class="plan-features">
-          <li class="plan-feature"><span class="check">✓</span> Up to 2 content updates/mo</li>
-          <li class="plan-feature"><span class="check">✓</span> Bug fix requests (72hr response)</li>
-          <li class="plan-feature"><span class="check">✓</span> Monthly uptime check</li>
-          <li class="plan-feature"><span class="check">✓</span> Email support</li>
-          <li class="plan-feature"><span class="dim">✗</span> <span style="opacity:0.4">Priority response</span></li>
-          <li class="plan-feature"><span class="dim">✗</span> <span style="opacity:0.4">AI feature maintenance</span></li>
+      <!-- Web Maintenance -->
+      <div class="plan-panel active" id="panel-web">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">WEB MAINTENANCE</div>
+            <div class="plan-desc">Monthly website upkeep — updates, fixes, monitoring.</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="plan-price">$199</div>
+            <div class="plan-cycle">/ month</div>
+          </div>
+        </div>
+        <ul class="plan-feats">
+          <li class="plan-feat">Up to 6 content updates per month</li>
+          <li class="plan-feat">Priority bug fixes (24hr response)</li>
+          <li class="plan-feat">Performance monitoring &amp; monthly report</li>
+          <li class="plan-feat">Minor feature additions</li>
+          <li class="plan-feat">Email + WhatsApp support</li>
         </ul>
-        <button class="plan-cta outline" onclick="openModal('Maintenance', '$99/mo', 'basic')">Get Started</button>
-        <div class="plan-secure">🔒 Stripe · Cancel anytime</div>
+        <button class="plan-select-btn" onclick="choosePlan('Web Maintenance','$199/mo','price_1T60LzLBbiKaLshEDceI8gn2',this)">
+          Select This Plan →
+        </button>
       </div>
 
-      <!-- Pro (Featured) -->
-      <div class="plan-card featured">
-        <span class="plan-badge popular">Most Popular</span>
-        <div class="plan-name">Care Plan</div>
-        <div class="plan-price">$199</div>
-        <div class="plan-cycle">per month</div>
-        <div class="plan-tagline">The complete package for active community & business sites.</div>
-        <ul class="plan-features">
-          <li class="plan-feature"><span class="check">✓</span> Up to 6 content updates/mo</li>
-          <li class="plan-feature"><span class="check">✓</span> Priority bug fixes (24hr response)</li>
-          <li class="plan-feature"><span class="check">✓</span> Performance monitoring</li>
-          <li class="plan-feature"><span class="check">✓</span> Minor feature additions</li>
-          <li class="plan-feature"><span class="check">✓</span> Monthly report & recommendations</li>
-          <li class="plan-feature"><span class="check">✓</span> Email + WhatsApp support</li>
+      <!-- Cloud Infrastructure -->
+      <div class="plan-panel" id="panel-cloud">
+        <div class="plan-badge">Cloud Essentials</div>
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">CLOUD INFRASTRUCTURE</div>
+            <div class="plan-desc">AWS &amp; Azure environment management and monitoring.</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="plan-price">$299</div>
+            <div class="plan-cycle">/ month</div>
+          </div>
+        </div>
+        <ul class="plan-feats">
+          <li class="plan-feat">AWS / Azure environment monitoring</li>
+          <li class="plan-feat">Monthly security patching</li>
+          <li class="plan-feat">Backup verification &amp; reports</li>
+          <li class="plan-feat">IAM / access control reviews</li>
+          <li class="plan-feat">Email support (48hr response)</li>
         </ul>
-        <button class="plan-cta solid" onclick="openModal('Care Plan', '$199/mo', 'care')">Subscribe Now</button>
-        <div class="plan-secure">🔒 Stripe · Cancel anytime</div>
+        <button class="plan-select-btn" onclick="choosePlan('Cloud Infrastructure','$299/mo','price_1T60KQLBbiKaLshEdKpkg6yS',this)">
+          Select This Plan →
+        </button>
       </div>
 
-      <!-- Growth -->
-      <div class="plan-card">
-        <span class="plan-badge premium">Growth</span>
-        <div class="plan-name">Full Partner</div>
-        <div class="plan-price">$399</div>
-        <div class="plan-cycle">per month</div>
-        <div class="plan-tagline">For organizations growing fast and building new features.</div>
-        <ul class="plan-features">
-          <li class="plan-feature"><span class="check">✓</span> Unlimited content updates</li>
-          <li class="plan-feature"><span class="check">✓</span> Same-day priority support</li>
-          <li class="plan-feature"><span class="check">✓</span> New page / feature development</li>
-          <li class="plan-feature"><span class="check">✓</span> AI feature builds & maintenance</li>
-          <li class="plan-feature"><span class="check">✓</span> Cloud infrastructure oversight</li>
-          <li class="plan-feature"><span class="check">✓</span> Bi-weekly strategy call</li>
+      <!-- AI Web Dev -->
+      <div class="plan-panel" id="panel-ai">
+        <div class="plan-badge">Infrastructure Pro</div>
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">AI WEB DEVELOPMENT</div>
+            <div class="plan-desc">Cloud infra + custom AI website builds for your organization.</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="plan-price">$799</div>
+            <div class="plan-cycle">/ month</div>
+          </div>
+        </div>
+        <ul class="plan-feats">
+          <li class="plan-feat">Everything in Cloud Essentials</li>
+          <li class="plan-feat">Custom AI website development</li>
+          <li class="plan-feat">Terraform / Ansible automation</li>
+          <li class="plan-feat">Identity &amp; access management</li>
+          <li class="plan-feat">Priority support (4hr response)</li>
         </ul>
-        <button class="plan-cta amber" onclick="openModal('Full Partner', '$399/mo', 'growth')">Get Started</button>
-        <div class="plan-secure">🔒 Stripe · Cancel anytime</div>
+        <button class="plan-select-btn" onclick="choosePlan('AI Web Development','$799/mo','price_1T60N3LBbiKaLshElJqiruCP',this)">
+          Select This Plan →
+        </button>
       </div>
 
-    </div>
-
-    <!-- HOW IT WORKS -->
-    <div class="how-section">
-      <div class="section-heading">How it works</div>
-      <p class="section-sub">Simple, transparent, no surprises.</p>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">01</div>
-          <div class="step-title">Choose a Plan</div>
-          <div class="step-desc">Pick the plan that fits your needs and subscribe securely through Stripe in under 2 minutes.</div>
+      <!-- Enterprise -->
+      <div class="plan-panel" id="panel-ent">
+        <div class="plan-badge">All-Inclusive</div>
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">ENTERPRISE PARTNER</div>
+            <div class="plan-desc">End-to-end infra + AI dev + 24/7 support. Full partner.</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="plan-price">$1,999</div>
+            <div class="plan-cycle">/ month</div>
+          </div>
         </div>
-        <div class="step">
-          <div class="step-num">02</div>
-          <div class="step-title">Send Your Requests</div>
-          <div class="step-desc">Email or message me with your updates. I'll confirm and get them done within the agreed timeframe.</div>
-        </div>
-        <div class="step">
-          <div class="step-num">03</div>
-          <div class="step-title">Review & Approve</div>
-          <div class="step-desc">I'll show you the changes before going live. You always have final say on everything published.</div>
-        </div>
-        <div class="step">
-          <div class="step-num">04</div>
-          <div class="step-title">Billed Monthly</div>
-          <div class="step-desc">Stripe automatically charges on your billing date. No invoices to chase. Cancel anytime, no questions asked.</div>
-        </div>
+        <ul class="plan-feats">
+          <li class="plan-feat">Everything in AI Web Development</li>
+          <li class="plan-feat">VMware &amp; on-prem management</li>
+          <li class="plan-feat">DR planning &amp; recovery testing</li>
+          <li class="plan-feat">Dedicated Slack channel</li>
+          <li class="plan-feat">24/7 on-call support</li>
+          <li class="plan-feat">Bi-weekly strategy calls</li>
+        </ul>
+        <button class="plan-select-btn" onclick="choosePlan('Enterprise Partner','$1,999/mo','price_1T60N3LBbiKaLshElJqiruCP',this)">
+          Select This Plan →
+        </button>
       </div>
-    </div>
 
-    <!-- FAQ -->
-    <div class="faq-section">
-      <div class="section-heading">Common questions</div>
-      <p class="section-sub">Everything you need to know before subscribing.</p>
-      <div class="faq-grid">
-        <div class="faq-item">
-          <div class="faq-q">What counts as a "content update"?</div>
-          <div class="faq-a">Anything you'd want changed on the site — text edits, new photos, event listings, schedule changes, new pages, or form updates. If you're unsure, just ask.</div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-q">Can I cancel at any time?</div>
-          <div class="faq-a">Yes. Cancel from your Stripe customer portal before your next billing date and you won't be charged again. No fees, no lock-in.</div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-q">What if I need more updates than my plan allows?</div>
-          <div class="faq-a">You can upgrade your plan anytime, or I'll quote additional requests as one-off work at a fair rate. I'll always tell you before doing anything outside the plan.</div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-q">Is my payment information secure?</div>
-          <div class="faq-a">All payments are processed by Stripe — the same platform used by Amazon and Google. Your card details are never stored on my servers.</div>
-        </div>
+      <!-- Trust row -->
+      <div class="trust-row" style="margin-top:16px;">
+        <div class="trust-item"><div class="trust-icon">🔒</div><div class="trust-text">Stripe Encrypted<br>Payments</div></div>
+        <div class="trust-item"><div class="trust-icon">✕</div><div class="trust-text">Cancel<br>Anytime</div></div>
+        <div class="trust-item"><div class="trust-icon">📧</div><div class="trust-text">Confirmation<br>By Email</div></div>
+        <div class="trust-item"><div class="trust-icon">⚡</div><div class="trust-text">Active Within<br>24 Hours</div></div>
+      </div>
+
+      <!-- Contact alt -->
+      <div class="alt-contact">
+        <div class="alt-contact-title">NOT SURE WHICH PLAN?</div>
+        <div class="alt-contact-sub">Email me and we can scope out the right fit for your needs.</div>
+        <a href="mailto:info@xentaa.com?subject=Service%20Plan%20Inquiry&body=Hi%20Faisal%2C%0A%0AI%27d%20like%20to%20discuss%20which%20plan%20is%20right%20for%20me.%0A%0AName%3A%0AOrganization%3A%0ANeeds%3A%0A" class="alt-contact-link">Email info@xentaa.com →</a>
       </div>
     </div>
 
-    <!-- CONTACT -->
-    <div class="contact-strip">
-      <p>Not sure which plan is right for you? Let's talk first.</p>
-      <a href="/cdn-cgi/l/email-protection#563f383039162e33382237377835393b"><span class="__cf_email__" data-cfemail="bfd6d1d9d0ffc7dad1cbdede91dcd0d2">[email&#160;protected]</span></a>
-    </div>
+    <!-- RIGHT — Sticky checkout -->
+    <div class="checkout-col">
+      <div class="checkout-box">
+        <div class="checkout-title">CHECKOUT</div>
+        <div class="checkout-sub">Secure payment via Stripe</div>
 
+        <!-- No plan selected state -->
+        <div id="no-plan" class="no-plan-msg">← Select a plan to continue</div>
+
+        <!-- Selected plan summary -->
+        <div id="plan-summary" class="selected-plan-row" style="display:none;">
+          <div class="selected-plan-name" id="summary-name">—</div>
+          <div class="selected-plan-price" id="summary-price">—</div>
+        </div>
+
+        <!-- Form -->
+        <div id="checkout-form">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="f-name" placeholder="John Smith" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="f-email" placeholder="john@company.com" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <span class="card-label">Card Details</span>
+            <div id="card-element"></div>
+          </div>
+          <button class="submit-btn" id="submit-btn" onclick="handleSubscribe()" disabled>
+            Select a Plan First
+          </button>
+          <div class="error-msg" id="error-msg"></div>
+          <div class="secure-note">🔒 Encrypted by Stripe · Cancel anytime from your email</div>
+        </div>
+
+        <!-- Success state -->
+        <div class="success-box" id="success-box">
+          <div class="success-icon">✅</div>
+          <div class="success-title">SUBSCRIBED!</div>
+          <div class="success-msg">Thank you — your subscription is active.<br><br>Check your inbox for confirmation.<br>Faisal will be in touch within 24 hours.</div>
+          <a href="index.html" style="display:inline-block;margin-top:24px;font-family:var(--font-mono);font-size:.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid var(--border);padding:12px 28px;transition:all .25s;">← Back to Portfolio</a>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- FOOTER -->
-  <footer>© 2025 Faisal Ssempagama · Richmond, VA · All rights reserved</footer>
-
-  <!-- MODAL -->
-  <div class="overlay" id="overlay">
-    <div class="modal">
-      <button class="modal-close" onclick="closeModal()">✕</button>
-
-      <div id="form-view">
-        <div class="modal-plan-badge" id="modal-badge">Care Plan</div>
-        <div class="modal-title" id="modal-title">Subscribe</div>
-        <div class="modal-price" id="modal-price">$199 / month · recurring</div>
-
-        <label class="form-label">Full Name</label>
-        <input class="form-input" type="text" id="f-name" placeholder="e.g. Al-Madina Richmond" />
-
-        <label class="form-label">Email Address</label>
-        <input class="form-input" type="email" id="f-email" placeholder="admin@example.org" />
-
-        <label class="form-label">Card Details</label>
-        <div id="card-element"></div>
-
-        <button class="submit-btn" id="submit-btn" onclick="handleSubscribe()">
-          Confirm Subscription
-        </button>
-        <div class="modal-footer-note">🔒 Encrypted by Stripe · Cancel anytime from your email</div>
-      </div>
-
-      <div id="success-view" class="success-state" style="display:none;">
-        <div class="success-icon">✅</div>
-        <div class="success-title">You're subscribed!</div>
-        <div class="success-msg">
-          A confirmation has been sent to your email.<br>
-          Faisal will be in touch within 24 hours to get started.
-        </div>
-      </div>
+  <div class="page-footer">
+    <div class="footer-copy">© 2025 Faisal Ssempagama · Xentaa Web Services</div>
+    <div class="footer-links">
+      <a href="index.html">Portfolio</a>
+      <a href="mailto:info@xentaa.com">Contact</a>
+      <a href="https://linkedin.com/in/faisalssempagama" target="_blank">LinkedIn</a>
     </div>
   </div>
 
   <script>
-    const STRIPE_KEY = 'pk_live_51R864pLBbiKaLshEID7ainzBH8Id2nnZqwTFE8PqCFgCB4Pmq8ANGLn9DnvuoiSbdGSPLFOdzwshgiWQVBYKKaZC00wBLYmoHZ';
-
-    const PRICE_IDS = {
-      basic:  'price_1T60KQLBbiKaLshEdKpkg6yS',
-      care:   'price_1T60LzLBbiKaLshEDceI8gn2',
-      growth: 'price_1T60N3LBbiKaLshElJqiruCP'
-    };
+    // ── STRIPE CONFIG ────────────────────────────────────────
+    var STRIPE_KEY = 'pk_live_51R864pLBbiKaLshEID7ainzBH8Id2nnZqwTFE8PqCFgCB4Pmq8ANGLn9DnvuoiSbdGSPLFOdzwshgiWQVBYKKaZC00wBLYmoHZ';
 
     var stripeInstance = null;
     var cardElement = null;
-    var activePlan = null;
+    var activePriceId = null;
     var stripeReady = false;
 
-    function openModal(title, price, plan) {
-      activePlan = plan;
-      document.getElementById('modal-badge').textContent = title;
-      document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-price').textContent = price + ' · recurring monthly';
-      document.getElementById('form-view').style.display = 'block';
-      document.getElementById('success-view').style.display = 'none';
-      document.getElementById('submit-btn').textContent = 'Confirm Subscription';
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('overlay').classList.add('open');
-      setTimeout(mountCard, 150);
+    // ── CURSOR ───────────────────────────────────────────────
+    var cur=document.getElementById('cursor'), ring=document.getElementById('ring');
+    var mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',function(e){ mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
+    (function loop(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(loop); })();
+    function addHover(el){ el.addEventListener('mouseenter',function(){ cur.classList.add('hov'); ring.classList.add('hov'); }); el.addEventListener('mouseleave',function(){ cur.classList.remove('hov'); ring.classList.remove('hov'); }); }
+    document.querySelectorAll('a,button,input').forEach(addHover);
+
+    // ── PLAN TABS ────────────────────────────────────────────
+    function selectTab(btn, panelId) {
+      document.querySelectorAll('.plan-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.querySelectorAll('.plan-tab').forEach(function(t){ t.classList.remove('active'); });
+      document.getElementById(panelId).classList.add('active');
+      btn.classList.add('active');
     }
 
-    function mountCard() {
-      var cardEl = document.getElementById('card-element');
+    // ── CHOOSE PLAN ──────────────────────────────────────────
+    function choosePlan(name, price, priceId, btn) {
+      activePriceId = priceId;
+
+      // Update summary
+      document.getElementById('no-plan').style.display = 'none';
+      document.getElementById('plan-summary').style.display = 'flex';
+      document.getElementById('summary-name').textContent = name;
+      document.getElementById('summary-price').textContent = price;
+
+      // Update all plan buttons
+      document.querySelectorAll('.plan-select-btn').forEach(function(b){
+        b.classList.remove('selected');
+        b.textContent = 'Select This Plan →';
+      });
+      btn.classList.add('selected');
+      btn.textContent = '✓ Plan Selected';
+
+      // Enable submit
+      var submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Subscribe — ' + price;
+
+      // Init Stripe card if not already done
+      initStripe();
+
+      // Scroll checkout into view on mobile
+      if(window.innerWidth < 900){
+        document.querySelector('.checkout-col').scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    }
+
+    // ── INIT STRIPE ──────────────────────────────────────────
+    function initStripe() {
+      if (stripeReady) return;
       if (typeof Stripe === 'undefined') {
-        cardEl.innerHTML = '<p style="font-size:12px;color:red;">Stripe.js failed to load. Please refresh.</p>';
+        showError('Stripe.js failed to load. Please refresh the page.');
         return;
       }
-      if (stripeReady && cardElement) return;
       try {
         stripeInstance = Stripe(STRIPE_KEY);
-        var elements = stripeInstance.elements();
+        var elements = stripeInstance.elements({
+          fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&display=swap' }]
+        });
         cardElement = elements.create('card', {
           style: {
-            base: {
-              color: '#1a1714',
-              fontFamily: 'monospace',
-              fontSize: '14px',
-              '::placeholder': { color: '#8a7f72' }
-            }
+            base: { color:'#f5f0e8', fontFamily:'"DM Mono",monospace', fontSize:'14px', letterSpacing:'0.5px', '::placeholder':{ color:'#7a7060' } },
+            invalid: { color:'#e74c3c' }
           }
         });
-        cardEl.innerHTML = '';
         cardElement.mount('#card-element');
+        cardElement.on('focus', function(){ document.getElementById('card-element').classList.add('focused'); });
+        cardElement.on('blur', function(){ document.getElementById('card-element').classList.remove('focused'); });
         stripeReady = true;
       } catch(err) {
-        cardEl.innerHTML = '<p style="font-size:12px;color:red;">Error: ' + err.message + '</p>';
+        showError('Stripe error: ' + err.message);
       }
     }
 
-    function closeModal() {
-      document.getElementById('overlay').classList.remove('open');
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('overlay').addEventListener('click', function(e) {
-        if (e.target === document.getElementById('overlay')) closeModal();
-      });
-    });
-
+    // ── SUBSCRIBE ────────────────────────────────────────────
     async function handleSubscribe() {
-      var name  = document.getElementById('f-name').value.trim();
+      var name = document.getElementById('f-name').value.trim();
       var email = document.getElementById('f-email').value.trim();
-      var btn   = document.getElementById('submit-btn');
+      var btn = document.getElementById('submit-btn');
+      clearError();
 
-      if (!name || !email) {
-        alert('Please enter your name and email.');
-        return;
-      }
-      if (!stripeReady || !cardElement) {
-        alert('Payment form not ready. Please refresh and try again.');
-        return;
-      }
+      if (!name || !email) { showError('Please enter your name and email.'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Please enter a valid email address.'); return; }
+      if (!activePriceId) { showError('Please select a plan first.'); return; }
+      if (!stripeReady || !cardElement) { showError('Payment form not ready. Please refresh and try again.'); return; }
 
       btn.textContent = 'Processing...';
       btn.disabled = true;
 
       try {
         var res = await fetch('/api/create-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: name, email: email, priceId: PRICE_IDS[activePlan] })
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ name:name, email:email, priceId:activePriceId })
         });
 
         var data = await res.json();
 
         if (!res.ok) {
           if (data.error === 'already_subscribed') {
-            throw new Error('This email is already subscribed. Email info@xentaa.com to make changes.');
+            throw new Error('This email is already subscribed to this plan. Email info@xentaa.com to make changes.');
           }
           throw new Error(data.error || 'Server error. Please try again.');
         }
@@ -847,22 +497,34 @@
         var result = await stripeInstance.confirmCardPayment(data.clientSecret, {
           payment_method: {
             card: cardElement,
-            billing_details: { name: name, email: email }
+            billing_details: { name:name, email:email }
           }
         });
 
         if (result.error) throw new Error(result.error.message);
 
-        document.getElementById('form-view').style.display = 'none';
-        document.getElementById('success-view').style.display = 'block';
+        // SUCCESS
+        document.getElementById('checkout-form').style.display = 'none';
+        document.getElementById('plan-summary').style.display = 'none';
+        document.getElementById('success-box').style.display = 'block';
 
       } catch(err) {
-        alert('Error: ' + err.message);
-        btn.textContent = 'Confirm Subscription';
+        showError(err.message);
+        btn.textContent = 'Subscribe — Try Again';
         btn.disabled = false;
       }
     }
-  </script>
 
+    function showError(msg) {
+      var el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function clearError() {
+      var el = document.getElementById('error-msg');
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  </script>
 </body>
 </html>
